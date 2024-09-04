@@ -1,4 +1,3 @@
-// TODO: ajustar
 - **O usuário pode cadastrar informações de sua noite de sono;**
     - Tempo de sono (horas);
     - Horário de ir dormir (date);
@@ -49,3 +48,5 @@
     - Análise pessoal / Comentário sobre o sonho;
 - **O sistema fornece estatísticas sobre o ciclo de sono semanal / mensal / anual do usuário;**
 - **O sistema fornece estatísticas sobre sonhos semanais / mensais / anuais do usuário;**
+- **O usuário pode cadastrar um sonho rápido;**
+    - Um sonho rápido só possui título e descrição;
