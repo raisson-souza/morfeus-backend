@@ -1,13 +1,14 @@
-import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column, hasMany } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 import DreamDuration from './dream_duration.js'
 import DreamHour from './dream_hour.js'
 import DreamLucidityLevel from './dream_lucidity_level.js'
 import DreamPointOfView from './dream_point_of_view.js'
 import DreamRealityLevel from './dream_reality_level.js'
+import DreamTag from './dream_tag.js'
 import DreamType from './dream_type.js'
 import Sleep from './sleep.js'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import type { DreamClimateType } from '../types/dreamClimate.js'
 
 export default class Dream extends BaseModel {
@@ -85,4 +86,8 @@ export default class Dream extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+
+  /** Relações dreamTag do sonho */
+  @hasMany(() => DreamTag)
+  declare dreamTag: HasMany<typeof DreamTag>
 }

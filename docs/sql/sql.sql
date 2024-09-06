@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS "tags" (
     PRIMARY KEY ("id")
 );
 
-CREATE TABLE IF NOT EXISTS "dream_tag_relations" (
+CREATE TABLE IF NOT EXISTS "dream_tag" (
     "id" SERIAL,
     "dream_id" INT NOT NULL,
     "tag_id" INT NOT NULL,
