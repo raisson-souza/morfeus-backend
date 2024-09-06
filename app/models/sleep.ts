@@ -1,9 +1,10 @@
+import { BaseModel, belongsTo, column, hasMany } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
-import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
-import type { SleepHumorType } from '../types/sleepHumor.js'
+import Dream from './dream.js'
+import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import type { BiologicalOccurencesType } from '../types/biologicalOccurences.js'
+import type { SleepHumorType } from '../types/sleepHumor.js'
 import User from './user.js'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 
 export default class Sleep extends BaseModel {
   @column({ isPrimary: true })
@@ -40,4 +41,7 @@ export default class Sleep extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+
+  @hasMany(() => Dream)
+  declare sleep: HasMany<typeof Dream>
 }

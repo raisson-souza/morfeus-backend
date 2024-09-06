@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS "dream_duration" (
     PRIMARY KEY ("id")
 );
 
-INSERT INTO "dream_hour" VALUES
+INSERT INTO "dream_duration" VALUES
 ("Instantâneo"),
 ("Curto"),
 ("Médio"),
