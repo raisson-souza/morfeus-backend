@@ -16,5 +16,5 @@ export default class Tag extends BaseModel {
 
   /** Relações dreamTag da tag */
   @hasMany(() => DreamTag)
-  declare dreamTag: HasMany<typeof DreamTag>
+  declare dreamTags: HasMany<typeof DreamTag>
 }

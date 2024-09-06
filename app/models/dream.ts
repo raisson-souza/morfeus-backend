@@ -89,5 +89,5 @@ export default class Dream extends BaseModel {
 
   /** Relações dreamTag do sonho */
   @hasMany(() => DreamTag)
-  declare dreamTag: HasMany<typeof DreamTag>
+  declare dreamTags: HasMany<typeof DreamTag>
 }

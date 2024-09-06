@@ -52,5 +52,5 @@ export default class Sleep extends BaseModel {
 
   /** Sonhos do sono */
   @hasMany(() => Dream)
-  declare sleep: HasMany<typeof Dream>
+  declare dreams: HasMany<typeof Dream>
 }
