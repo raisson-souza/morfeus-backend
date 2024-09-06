@@ -34,6 +34,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   static accessTokens = DbAccessTokensProvider.forModel(User)
 
+  /** Sonos do usuário */
   @hasMany(() => Sleep)
   declare sleeps: HasMany<typeof Sleep>
 }
