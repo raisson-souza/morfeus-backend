@@ -1,6 +1,6 @@
 import { createUserValidator, updateUserValidator } from '#validators/user'
 import { inject } from '@adonisjs/core'
-import NotFoundException from '#exceptions/not_found_exception'
+import CustomException from '#exceptions/custom_exception'
 import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 import UserService from '#services/user_service'
@@ -24,7 +24,7 @@ export default class UserController {
     async get({ params }: HttpContext) : Promise<User | null> {
         const { id } = params
         const user = await this.userService.Get(Number.parseInt(id ?? 0))
-        if (!user) throw new NotFoundException("Usuário não encontrado.")
+        if (!user) throw new CustomException(404, "Usuário não encontrado.")
         return user!
     }
 

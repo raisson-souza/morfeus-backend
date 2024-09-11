@@ -1,6 +1,6 @@
 import { UserInput, UserOutput } from "../types/userTypes.js"
+import CustomException from "#exceptions/custom_exception"
 import db from "@adonisjs/lucid/services/db"
-import NotFoundException from "#exceptions/not_found_exception"
 import User from "#models/user"
 import UserServiceProps from "./types/user_service_props.js"
 
@@ -17,7 +17,7 @@ export default class UserService implements UserServiceProps {
 
     async Update(user: UserOutput) : Promise<void> {
         const userFound = await this.Get(user.id)
-        if (!userFound) throw new NotFoundException("Usuário não encontrado.")
+        if (!userFound) throw new CustomException(404, "Usuário não encontrado.")
         await db.transaction(async (trx) => {
             await User.updateOrCreate({ id: user.id }, user, { client: trx })
         })
