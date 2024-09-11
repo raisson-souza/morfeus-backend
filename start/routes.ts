@@ -8,7 +8,8 @@
 */
 
 import router from '@adonisjs/core/services/router'
-const userController = () => import("#controllers/users_controller")
+
+const userController = () => import("#controllers/user_controller")
 
 router
   .group(() => {
@@ -20,8 +21,8 @@ router
       .group(() => {
         router.post('/', [userController, 'create']),
         router.put('/', [userController, 'update']),
-        router.get('/:id', [userController, 'get']),
-        router.get('/list', [userController, 'list'])
+        router.get('/list', [userController, 'list']),
+        router.get('/:id', [userController, 'get'])
       })
       .prefix('/users'),
 

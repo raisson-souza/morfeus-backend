@@ -1,31 +1,30 @@
-import User from "#models/user"
+import { UserInput, UserOutput } from "../types/userTypes.js"
 import db from "@adonisjs/lucid/services/db"
-import { UserServiceProps } from "./types/user_service_props.js"
+import NotFoundException from "#exceptions/not_found_exception"
+import User from "#models/user"
+import UserServiceProps from "./types/user_service_props.js"
 
-const UserService : UserServiceProps = {
-    Create: async (user: any) : Promise<void> => {
+export default class UserService implements UserServiceProps {
+    async Get(id: number) {
+        return await User.find(id)
+    }
+
+    async Create(user: UserInput) : Promise<void> {
         await db.transaction(async (trx) => {
             await User.create(user, { client: trx })
         })
-    },
+    }
 
-    Update: async (user: any) : Promise<void> => {
-        // const userFound = await UserService.Get(user.id)
-        // if (!userFound) {
-        //     throw new NotFoundException("Usuário não encontrado.", { status: 404, code: 'E_NOT_FOUND' })
-        // }
+    async Update(user: UserOutput) : Promise<void> {
+        const userFound = await this.Get(user.id)
+        if (!userFound) throw new NotFoundException("Usuário não encontrado.")
         await db.transaction(async (trx) => {
             await User.updateOrCreate({ id: user.id }, user, { client: trx })
         })
-    },
+    }
 
-    Get: async (id: number) => {
-        return await User.find(id)
-    },
-
-    List: async () => {
+    async List() {
+        // TODO: retornar ordenado por ID
         return await User.all()
     }
 }
-
-export default UserService

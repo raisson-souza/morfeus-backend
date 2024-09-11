@@ -1,27 +1,34 @@
 import { createUserValidator, updateUserValidator } from '#validators/user'
+import { inject } from '@adonisjs/core'
+import NotFoundException from '#exceptions/not_found_exception'
 import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 import UserService from '#services/user_service'
 
-export default class UsersController {
+@inject()
+export default class UserController {
+    constructor(protected userService : UserService) { }
+
     async create({ request, response }: HttpContext) : Promise<void> {
         const user = await request.validateUsing(createUserValidator)
-        UserService.Create(user)
+        await this.userService.Create(user)
         response.status(201).json("Usuário criado com sucesso.")
     }
 
     async update({ request, response }: HttpContext) : Promise<void> {
         const user = await request.validateUsing(updateUserValidator)
-        UserService.Update(user)
+        await this.userService.Update(user)
         response.status(201).json("Usuário atualizado com sucesso.")
     }
 
     async get({ params }: HttpContext) : Promise<User | null> {
         const { id } = params
-        return await UserService.Get(Number.parseInt(id ?? 0))
+        const user = await this.userService.Get(Number.parseInt(id ?? 0))
+        if (!user) throw new NotFoundException("Usuário não encontrado.")
+        return user!
     }
 
     async list() : Promise<User[]> {
-        return await UserService.List()
+        return await this.userService.List()
     }
 }
