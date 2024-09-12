@@ -1,10 +1,12 @@
-import { DateTime } from 'luxon'
-import hash from '@adonisjs/core/services/hash'
-import { compose } from '@adonisjs/core/helpers'
 import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
-import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
+import { compose } from '@adonisjs/core/helpers'
+import { DateTime } from 'luxon'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
+import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
+import DreamAnalysis from './dream_analysis.js'
+import hash from '@adonisjs/core/services/hash'
 import Sleep from './sleep.js'
+import SleepAnalysis from './sleep_analysis.js'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
@@ -34,7 +36,15 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   static accessTokens = DbAccessTokensProvider.forModel(User)
 
-  /** Sonos do usuário */
+  /** Sonos */
   @hasMany(() => Sleep)
   declare sleeps: HasMany<typeof Sleep>
+
+  /** Análises de sono */
+  @hasMany(() => SleepAnalysis)
+  declare sleepsAnalysis: HasMany<typeof SleepAnalysis>
+
+  /** Análises de sonho */
+  @hasMany(() => DreamAnalysis)
+  declare dreamsAnalysis: HasMany<typeof DreamAnalysis>
 }
