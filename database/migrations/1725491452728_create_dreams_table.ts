@@ -33,6 +33,7 @@ export default class extends BaseSchema {
       table.boolean('erotic_dream').notNullable().defaultTo(false)
       table.boolean('hidden_dream').notNullable().defaultTo(false)
       table.string('personal_analysis')
+      table.boolean('is_imported').defaultTo(false)
       table.timestamp('created_at').defaultTo(this.db.rawQuery('now()').knexQuery)
       table.timestamp('updated_at')
     })

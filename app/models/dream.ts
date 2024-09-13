@@ -81,6 +81,10 @@ export default class Dream extends BaseModel {
   @column()
   declare personalAnalysis: string
 
+  /** É sonho importado */
+  @column()
+  declare isImported: boolean
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
