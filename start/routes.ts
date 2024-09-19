@@ -7,8 +7,8 @@
 |
 */
 
-import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
+import router from '@adonisjs/core/services/router'
 
 const userController = () => import("#controllers/user_controller")
 
@@ -24,6 +24,7 @@ router
         router.put('/', [userController, 'update']).use(middleware.auth({ guards: ['api'] })),
         router.get('/list', [userController, 'list']).use(middleware.auth({ guards: ['api'] })),
         router.get('/:id', [userController, 'get']).use(middleware.auth({ guards: ['api'] })),
+        router.delete('/:id', [userController, 'delete']).use(middleware.auth({ guards: ['api'] })),
         router.post('/login', [userController, 'login'])
       })
       .prefix('/users'),

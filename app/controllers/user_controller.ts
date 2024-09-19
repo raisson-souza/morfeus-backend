@@ -32,16 +32,17 @@ export default class UserController {
 
     async list({ request }: HttpContext) : Promise<ModelPaginatorContract<User>> {
         const { page, limit = 10, orderBy = "id", orderByDirection = "desc" } = await request.validateUsing(paginationValidator)
-        const users = await User.query()
-            .orderBy(orderBy, orderByDirection as any)
-            .paginate(page, limit)
-        return users
+        return await this.userService.List({ page, limit, orderBy, orderByDirection: orderByDirection as any })
+    }
+
+    async delete({ params }: HttpContext) : Promise<void> {
+        const { id } = params
+        await this.userService.Delete(id)
     }
 
     async login({ request }: HttpContext) : Promise<string | undefined> {
         const { email, password } = await request.validateUsing(loginValidator)
-        const user = await User.verifyCredentials(email, password)
-        const token = await User.accessTokens.create(user, ["*"], { expiresIn: "1h" })
+        const token = await this.userService.Login(email, password)
         return token.value?.release()
     }
 }
