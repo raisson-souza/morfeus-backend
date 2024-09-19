@@ -8,6 +8,7 @@
 */
 
 import router from '@adonisjs/core/services/router'
+import { middleware } from './kernel.js'
 
 const userController = () => import("#controllers/user_controller")
 
@@ -20,9 +21,10 @@ router
     router
       .group(() => {
         router.post('/', [userController, 'create']),
-        router.put('/', [userController, 'update']),
-        router.get('/list', [userController, 'list']),
-        router.get('/:id', [userController, 'get'])
+        router.put('/', [userController, 'update']).use(middleware.auth({ guards: ['api'] })),
+        router.get('/list', [userController, 'list']).use(middleware.auth({ guards: ['api'] })),
+        router.get('/:id', [userController, 'get']).use(middleware.auth({ guards: ['api'] })),
+        router.post('/login', [userController, 'login'])
       })
       .prefix('/users'),
 
@@ -34,7 +36,10 @@ router
         router.get('/:id', ({ response }) => { response.status(501).json("Rota não desenvolvida.") }),
         router.get('/list', ({ response }) => { response.status(501).json("Rota não desenvolvida.") })
       })
-      .prefix('/sleeps'),
+      .prefix('/sleeps')
+      .use(middleware.auth({
+        guards: ['api']
+      })),
 
     // Rota Sonhos
     router
@@ -45,5 +50,8 @@ router
         router.get('/list', ({ response }) => { response.status(501).json("Rota não desenvolvida.") })
       })
       .prefix('/dreams')
+      .use(middleware.auth({
+        guards: ['api']
+      }))
   })
   .prefix('/api')

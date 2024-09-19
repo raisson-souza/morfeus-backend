@@ -1,4 +1,4 @@
-import { createUserValidator, updateUserValidator } from '#validators/user'
+import { createUserValidator, loginValidator, updateUserValidator } from '#validators/user'
 import { inject } from '@adonisjs/core'
 import CustomException from '#exceptions/custom_exception'
 import type { HttpContext } from '@adonisjs/core/http'
@@ -30,5 +30,12 @@ export default class UserController {
 
     async list() : Promise<User[]> {
         return await this.userService.List()
+    }
+
+    async login({ request }: HttpContext) : Promise<string | undefined> {
+        const { email, password } = await request.validateUsing(loginValidator)
+        const user = await User.verifyCredentials(email, password)
+        const token = await User.accessTokens.create(user, ["*"], { expiresIn: "1h" })
+        return token.value?.release()
     }
 }
