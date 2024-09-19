@@ -1,5 +1,7 @@
 import { createUserValidator, loginValidator, updateUserValidator } from '#validators/user'
 import { inject } from '@adonisjs/core'
+import { ModelPaginatorContract } from '@adonisjs/lucid/types/model'
+import { paginationValidator } from '#validators/system'
 import CustomException from '#exceptions/custom_exception'
 import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
@@ -28,8 +30,12 @@ export default class UserController {
         return user!
     }
 
-    async list() : Promise<User[]> {
-        return await this.userService.List()
+    async list({ request }: HttpContext) : Promise<ModelPaginatorContract<User>> {
+        const { page, limit = 10, orderBy = "id", orderByDirection = "desc" } = await request.validateUsing(paginationValidator)
+        const users = await User.query()
+            .orderBy(orderBy, orderByDirection as any)
+            .paginate(page, limit)
+        return users
     }
 
     async login({ request }: HttpContext) : Promise<string | undefined> {
