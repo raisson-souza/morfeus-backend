@@ -3,6 +3,7 @@ import { DateTime } from 'luxon'
 import DreamDuration from './dream_duration.js'
 import DreamHour from './dream_hour.js'
 import DreamLucidityLevel from './dream_lucidity_level.js'
+import DreamOrigin from './dream_origin.js'
 import DreamPointOfView from './dream_point_of_view.js'
 import DreamRealityLevel from './dream_reality_level.js'
 import DreamTag from './dream_tag.js'
@@ -19,7 +20,8 @@ export default class Dream extends BaseModel {
   @belongsTo(() => Sleep)
   declare sleep: BelongsTo<typeof Sleep>
 
-  get sleepId() { return this.sleep.id }
+  @column()
+  declare sleepId: number
 
   /** Título do sonho */
   @column()
@@ -33,7 +35,8 @@ export default class Dream extends BaseModel {
   @belongsTo(() => DreamPointOfView)
   declare dreamPointOfView: BelongsTo<typeof DreamPointOfView>
 
-  get dreamPointOfViewDescription() { return this.dreamPointOfView.description }
+  @column()
+  declare dreamPointOfViewId: number
 
   /** Clima do sonho */
   @column()
@@ -43,31 +46,36 @@ export default class Dream extends BaseModel {
   @belongsTo(() => DreamHour)
   declare dreamHour: BelongsTo<typeof DreamHour>
 
-  get dreamHourDescription() { return this.dreamHour.description }
+  @column()
+  declare dreamHourId: number
 
   /** Duração do sonho */
   @belongsTo(() => DreamDuration)
   declare dreamDuration: BelongsTo<typeof DreamDuration>
 
-  get dreamDurationDescription() { return this.dreamDuration.description }
+  @column()
+  declare dreamDurationId: number
 
   /** Lucidez do sonho */
   @belongsTo(() => DreamLucidityLevel)
   declare dreamLucidityLevel: BelongsTo<typeof DreamLucidityLevel>
 
-  get dreamLucidityLevelDescription() { return this.dreamLucidityLevel.description }
+  @column()
+  declare dreamLucidityLevelId: number
 
   /** Tipo de sonho */
   @belongsTo(() => DreamType)
   declare dreamType: BelongsTo<typeof DreamType>
 
-  get dreamTypeDescription() { return this.dreamType.description }
+  @column()
+  declare dreamTypeId: number
 
   /** Nível de realidade do sonho */
   @belongsTo(() => DreamRealityLevel)
   declare dreamRealityLevel: BelongsTo<typeof DreamRealityLevel>
 
-  get dreamRealityLevelDescription() { return this.dreamRealityLevel.description }
+  @column()
+  declare dreamRealityLevelId: number
 
   /** É sonho erótico */
   @column()
@@ -81,9 +89,12 @@ export default class Dream extends BaseModel {
   @column()
   declare personalAnalysis: string
 
-  /** É sonho importado */
+  /** Origem do sonho */
+  @belongsTo(() => DreamOrigin)
+  declare dreamOrigin: BelongsTo<typeof DreamOrigin>
+
   @column()
-  declare isImported: boolean
+  declare dreamOriginId: number
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

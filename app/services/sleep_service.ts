@@ -7,89 +7,58 @@ import SleepServiceProps from "./types/sleep_service_props.js"
 import User from "#models/user"
 
 export default class SleepService implements SleepServiceProps {
-    async Create(sleep: SleepInput) : Promise<void> {
-        await db.transaction(async (trx) => {
-            const userExists = await User.find(sleep.userId, { client: trx })
-            if (!userExists) throw new CustomException(404, "Usuário inexistente para a criação do sono.")
+    async Create(sleep: SleepInput, validate = true) : Promise<Sleep> {
+        const userExists = await User.find(sleep.userId)
+        if (!userExists) throw new CustomException(404, "Usuário inexistente para a criação do sono.")
 
-            const sameDateSleep = await Sleep.findBy('date', sleep.date, { client: trx })
-            if (sameDateSleep) throw new CustomException(400, "Sono de mesma data já cadastrado.")
-
-            if (
-                (sleep.wakeUpHumor.undefinedHumor && sleep.wakeUpHumor.other) ||
-                (sleep.layDownHumor.undefinedHumor && sleep.layDownHumor.other) ||
-                (
-                    (sleep.wakeUpHumor.undefinedHumor || sleep.wakeUpHumor.other) &&
-                    (
-                        sleep.wakeUpHumor.calm ||
-                        sleep.wakeUpHumor.drowsiness ||
-                        sleep.wakeUpHumor.tiredness ||
-                        sleep.wakeUpHumor.anxiety ||
-                        sleep.wakeUpHumor.happiness ||
-                        sleep.wakeUpHumor.fear ||
-                        sleep.wakeUpHumor.sadness
-                    )
-                ) ||
-                (
-                    (sleep.layDownHumor.undefinedHumor || sleep.layDownHumor.other) &&
-                    (
-                        sleep.layDownHumor.calm ||
-                        sleep.layDownHumor.drowsiness ||
-                        sleep.layDownHumor.tiredness ||
-                        sleep.layDownHumor.anxiety ||
-                        sleep.layDownHumor.happiness ||
-                        sleep.layDownHumor.fear ||
-                        sleep.layDownHumor.sadness
-                    )
-                )
-            ) throw new CustomException(400, "Humor ao acordar ou ao dormir inválido.")
-
-            await Sleep.create(sleep, { client: trx })
+        return await db.transaction(async (trx) => {
+            if (validate) await this.Validate(sleep)
+            return await Sleep.create(sleep, { client: trx })
         })
     }
 
-    async Update(sleep: SleepOutput) : Promise<void> {
+    async Update(sleep: SleepOutput, validate = true) : Promise<Sleep> {
         const foundUser = await this.Get(sleep.id)
         if (!foundUser) throw new CustomException(404, "Sono não encontrado.")
 
-        await db.transaction(async (trx) => {
-            const userExists = await User.find(sleep.userId, { client: trx })
-            if (!userExists) throw new CustomException(404, "Usuário inexistente para a criação do sono.")
-
-            const sameDateSleep = await Sleep.findBy('date', sleep.date, { client: trx })
-            if (sameDateSleep) throw new CustomException(400, "Sono de mesma data já cadastrado.")
-
-            if (
-                (sleep.wakeUpHumor.undefinedHumor && sleep.wakeUpHumor.other) ||
-                (sleep.layDownHumor.undefinedHumor && sleep.layDownHumor.other) ||
-                (
-                    (sleep.wakeUpHumor.undefinedHumor || sleep.wakeUpHumor.other) &&
-                    (
-                        sleep.wakeUpHumor.calm ||
-                        sleep.wakeUpHumor.drowsiness ||
-                        sleep.wakeUpHumor.tiredness ||
-                        sleep.wakeUpHumor.anxiety ||
-                        sleep.wakeUpHumor.happiness ||
-                        sleep.wakeUpHumor.fear ||
-                        sleep.wakeUpHumor.sadness
-                    )
-                ) ||
-                (
-                    (sleep.layDownHumor.undefinedHumor || sleep.layDownHumor.other) &&
-                    (
-                        sleep.layDownHumor.calm ||
-                        sleep.layDownHumor.drowsiness ||
-                        sleep.layDownHumor.tiredness ||
-                        sleep.layDownHumor.anxiety ||
-                        sleep.layDownHumor.happiness ||
-                        sleep.layDownHumor.fear ||
-                        sleep.layDownHumor.sadness
-                    )
-                )
-            ) throw new CustomException(400, "Humor ao acordar ou ao dormir inválido.")
-
-            await Sleep.updateOrCreate({ id: sleep.id }, sleep, { client: trx })
+        return await db.transaction(async (trx) => {
+            if (validate) await this.Validate(sleep)
+            return await Sleep.updateOrCreate({ id: sleep.id }, sleep, { client: trx })
         })
+    }
+
+    async Validate(sleep: SleepInput): Promise<void> {
+        const sameDateSleep = await Sleep.findBy('date', sleep.date)
+        if (sameDateSleep) throw new CustomException(400, "Sono de mesma data já cadastrado.")
+
+        if (
+            (sleep.wakeUpHumor.undefinedHumor && sleep.wakeUpHumor.other) ||
+            (sleep.layDownHumor.undefinedHumor && sleep.layDownHumor.other) ||
+            (
+                (sleep.wakeUpHumor.undefinedHumor || sleep.wakeUpHumor.other) &&
+                (
+                    sleep.wakeUpHumor.calm ||
+                    sleep.wakeUpHumor.drowsiness ||
+                    sleep.wakeUpHumor.tiredness ||
+                    sleep.wakeUpHumor.anxiety ||
+                    sleep.wakeUpHumor.happiness ||
+                    sleep.wakeUpHumor.fear ||
+                    sleep.wakeUpHumor.sadness
+                )
+            ) ||
+            (
+                (sleep.layDownHumor.undefinedHumor || sleep.layDownHumor.other) &&
+                (
+                    sleep.layDownHumor.calm ||
+                    sleep.layDownHumor.drowsiness ||
+                    sleep.layDownHumor.tiredness ||
+                    sleep.layDownHumor.anxiety ||
+                    sleep.layDownHumor.happiness ||
+                    sleep.layDownHumor.fear ||
+                    sleep.layDownHumor.sadness
+                )
+            )
+        ) throw new CustomException(400, "Humor ao acordar ou ao dormir inválido.")
     }
 
     async Get(id: number) {

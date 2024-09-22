@@ -10,6 +10,7 @@
 import { middleware } from './kernel.js'
 import router from '@adonisjs/core/services/router'
 
+const dreamController = () => import("#controllers/dream_controller")
 const sleepController = () => import("#controllers/sleep_controller")
 const userController = () => import("#controllers/user_controller")
 
@@ -33,6 +34,12 @@ router
           .group(() => { router.get('/list', [sleepController, 'listByUser']) })
           .prefix('/:id/sleeps')
           .use(middleware.auth({ guards: ['api'] }))
+
+        // Sonhos do usuário
+        router
+          .group(() => { router.get('/list', [dreamController, 'listByUser']) })
+          .prefix('/:id/dreams')
+          .use(middleware.auth({ guards: ['api'] }))
       })
       .prefix('/users'),
 
@@ -51,10 +58,12 @@ router
     // Rota Sonhos
     router
       .group(() => {
-        router.post('/', ({ response }) => { response.status(501).json("Rota não desenvolvida.") }),
-        router.put('/', ({ response }) => { response.status(501).json("Rota não desenvolvida.") }),
-        router.get('/:id', ({ response }) => { response.status(501).json("Rota não desenvolvida.") }),
-        router.get('/list', ({ response }) => { response.status(501).json("Rota não desenvolvida.") })
+        router.post('/', [dreamController, 'create']),
+        router.post('/uncomplete', [dreamController, 'createUncomplete']),
+        router.put('/', [dreamController, 'update']),
+        router.get('/list', [dreamController, 'list']),
+        router.get('/:id', [dreamController, 'get'])
+        router.delete('/:id', [dreamController, 'delete'])
       })
       .prefix('/dreams')
       .use(middleware.auth({

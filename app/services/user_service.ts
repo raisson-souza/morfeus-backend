@@ -7,19 +7,23 @@ import User from "#models/user"
 import UserServiceProps from "./types/user_service_props.js"
 
 export default class UserService implements UserServiceProps {
-    async Create(user: UserInput) : Promise<void> {
-        await db.transaction(async (trx) => {
-            await User.create(user, { client: trx })
+    async Create(user: UserInput, validate = true) : Promise<User> {
+        return await db.transaction(async (trx) => {
+            if (validate) await this.Validate(user)
+            return await User.create(user, { client: trx })
         })
     }
 
-    async Update(user: UserOutput) : Promise<void> {
+    async Update(user: UserOutput, validate = true) : Promise<User> {
         const userFound = await this.Get(user.id)
         if (!userFound) throw new CustomException(404, "Usuário não encontrado.")
-        await db.transaction(async (trx) => {
-            await User.updateOrCreate({ id: user.id }, user, { client: trx })
+        return await db.transaction(async (trx) => {
+            if (validate) await this.Validate(user)
+            return await User.updateOrCreate({ id: user.id }, user, { client: trx })
         })
     }
+
+    async Validate(_: UserInput): Promise<void> { }
 
     async Get(id: number) {
         return await User.find(id)
