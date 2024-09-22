@@ -1,0 +1,102 @@
+import vine from '@vinejs/vine'
+
+/** Valida a criação de um sono */
+export const createSleepValidator = vine.compile(
+    vine.object({
+        userId: vine.number(),
+        date: vine.date({ formats: ['YYYY/MM/DD', 'YYYY-MM-DD'] }),
+        sleepTime: vine.number(),
+        sleepStart: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] }),
+        sleepEnd: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] }),
+        wakeUpHumor: vine.object({
+            undefinedHumor: vine.boolean(),
+            calm: vine.boolean(),
+            drowsiness: vine.boolean(),
+            tiredness: vine.boolean(),
+            anxiety: vine.boolean(),
+            happiness: vine.boolean(),
+            fear: vine.boolean(),
+            sadness: vine.boolean(),
+            other: vine.boolean(),
+        }),
+        layDownHumor: vine.object({
+            undefinedHumor: vine.boolean(),
+            calm: vine.boolean(),
+            drowsiness: vine.boolean(),
+            tiredness: vine.boolean(),
+            anxiety: vine.boolean(),
+            happiness: vine.boolean(),
+            fear: vine.boolean(),
+            sadness: vine.boolean(),
+            other: vine.boolean(),
+        }),
+        biologicalOccurences: vine.object({
+            sudorese: vine.boolean(),
+            bruxismo: vine.boolean(),
+            apneiaDoSono: vine.boolean(),
+            ronco: vine.boolean(),
+            movimentosPeriodicosDosMembros: vine.boolean(),
+            despertaresParciais: vine.boolean(),
+            refluxoGastroesofagico: vine.boolean(),
+            sialorreia: vine.boolean(),
+            arritmias: vine.boolean(),
+            mioclonia: vine.boolean(),
+            parassonia: vine.boolean(),
+            epistaxe: vine.boolean(),
+            miccaoInvoluntaria: vine.boolean(),
+            evacuacaoInvoluntaria: vine.boolean(),
+            polucao: vine.boolean(),
+        }),
+    })
+)
+
+/** Valida a atualização de um sono */
+export const updateSleepValidator = vine.compile(
+    vine.object({
+        id: vine.number(),
+        userId: vine.number(),
+        date: vine.date({ formats: ['YYYY/MM/DD', 'YYYY-MM-DD'] }),
+        sleepTime: vine.number(),
+        sleepStart: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] }),
+        sleepEnd: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] }),
+        wakeUpHumor: vine.object({
+            undefinedHumor: vine.boolean(),
+            calm: vine.boolean(),
+            drowsiness: vine.boolean(),
+            tiredness: vine.boolean(),
+            anxiety: vine.boolean(),
+            happiness: vine.boolean(),
+            fear: vine.boolean(),
+            sadness: vine.boolean(),
+            other: vine.boolean(),
+        }),
+        layDownHumor: vine.object({
+            undefinedHumor: vine.boolean(),
+            calm: vine.boolean(),
+            drowsiness: vine.boolean(),
+            tiredness: vine.boolean(),
+            anxiety: vine.boolean(),
+            happiness: vine.boolean(),
+            fear: vine.boolean(),
+            sadness: vine.boolean(),
+            other: vine.boolean(),
+        }),
+        biologicalOccurences: vine.object({
+            sudorese: vine.boolean(),
+            bruxismo: vine.boolean(),
+            apneiaDoSono: vine.boolean(),
+            ronco: vine.boolean(),
+            movimentosPeriodicosDosMembros: vine.boolean(),
+            despertaresParciais: vine.boolean(),
+            refluxoGastroesofagico: vine.boolean(),
+            sialorreia: vine.boolean(),
+            arritmias: vine.boolean(),
+            mioclonia: vine.boolean(),
+            parassonia: vine.boolean(),
+            epistaxe: vine.boolean(),
+            miccaoInvoluntaria: vine.boolean(),
+            evacuacaoInvoluntaria: vine.boolean(),
+            polucao: vine.boolean(),
+        }),
+    })
+)

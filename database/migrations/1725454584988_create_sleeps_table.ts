@@ -1,6 +1,6 @@
 import { BaseSchema } from '@adonisjs/lucid/schema'
-import { SleepHumorType } from '../../app/types/sleepHumor.js'
 import { BiologicalOccurencesType } from '../../app/types/biologicalOccurences.js'
+import { SleepHumorType } from '../../app/types/sleepHumor.js'
 
 const defaultHumor : SleepHumorType = {
   undefinedHumor: true,
@@ -19,17 +19,17 @@ const defaultBiologicalOccurences : BiologicalOccurencesType = {
   bruxismo: false,
   apneiaDoSono: false,
   ronco: false,
-  movimentosPeriódicosDosMembros: false,
+  movimentosPeriodicosDosMembros: false,
   despertaresParciais: false,
-  refluxoGastroesofágico: false,
-  sialorréia: false,
+  refluxoGastroesofagico: false,
+  sialorreia: false,
   arritmias: false,
   mioclonia: false,
   parassonia: false,
   epistaxe: false,
-  micçãoInvoluntária: false,
-  evacuaçãoInvoluntária: false,
-  polução: false
+  miccaoInvoluntaria: false,
+  evacuacaoInvoluntaria: false,
+  polucao: false
 }
 
 export default class extends BaseSchema {
@@ -38,7 +38,7 @@ export default class extends BaseSchema {
   async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
-      table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE')
+      table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE').notNullable()
       table.date('date').notNullable()
       table.integer('sleep_time').notNullable()
       table.date('sleep_start').notNullable()

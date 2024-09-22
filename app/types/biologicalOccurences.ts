@@ -3,15 +3,15 @@ export type BiologicalOccurencesType = {
     bruxismo: boolean
     apneiaDoSono: boolean
     ronco: boolean
-    movimentosPeriódicosDosMembros: boolean
+    movimentosPeriodicosDosMembros: boolean
     despertaresParciais: boolean
-    refluxoGastroesofágico: boolean
-    sialorréia: boolean
+    refluxoGastroesofagico: boolean
+    sialorreia: boolean
     arritmias: boolean
     mioclonia: boolean
     parassonia: boolean
     epistaxe: boolean
-    micçãoInvoluntária: boolean
-    evacuaçãoInvoluntária: boolean
-    polução: boolean
+    miccaoInvoluntaria: boolean
+    evacuacaoInvoluntaria: boolean
+    polucao: boolean
 }

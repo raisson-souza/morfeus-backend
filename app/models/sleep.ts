@@ -14,7 +14,8 @@ export default class Sleep extends BaseModel {
   @belongsTo(() => User)
   declare user: BelongsTo<typeof User>
 
-  get userId() { return this.user.id }
+  @column()
+  declare userId: number
 
   /** Data do sono */
   @column.date()
