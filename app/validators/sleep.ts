@@ -47,6 +47,33 @@ export const createSleepValidator = vine.compile(
             evacuacaoInvoluntaria: vine.boolean(),
             polucao: vine.boolean(),
         }),
+        dreams: vine.array(
+            vine.object({
+                title: vine.string(),
+                description: vine.string(),
+                dreamPointOfViewId: vine.number(),
+                climate: vine.object({
+                    ameno: vine.boolean(),
+                    calor: vine.boolean(),
+                    garoa: vine.boolean(),
+                    chuva: vine.boolean(),
+                    tempestade: vine.boolean(),
+                    nevoa: vine.boolean(),
+                    neve: vine.boolean(),
+                    multiplos: vine.boolean(),
+                    outro: vine.boolean(),
+                    indefinido: vine.boolean(),
+                }),
+                dreamHourId: vine.number(),
+                dreamDurationId: vine.number(),
+                dreamLucidityLevelId: vine.number(),
+                dreamTypeId: vine.number(),
+                dreamRealityLevelId: vine.number(),
+                eroticDream: vine.boolean(),
+                hiddenDream: vine.boolean(),
+                personalAnalysis: vine.string().optional(),
+            })
+        ).optional()
     })
 )
 

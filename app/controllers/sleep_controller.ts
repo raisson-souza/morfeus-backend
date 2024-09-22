@@ -1,5 +1,6 @@
 import { createSleepValidator, updateSleepValidator } from '#validators/sleep'
 import { DateTime } from 'luxon'
+import { DreamInput } from '../types/dreamTypes.js'
 import { inject } from '@adonisjs/core'
 import { ModelPaginatorContract } from '@adonisjs/lucid/types/model'
 import { paginationValidator } from '#validators/system'
@@ -14,6 +15,38 @@ export default class SleepController {
 
     async create({ request, response }: HttpContext) : Promise<void> {
         const sleep = await request.validateUsing(createSleepValidator)
+        const dreams: DreamInput[] = []
+
+        if (sleep.dreams != undefined && sleep.dreams.length > 0) {
+            sleep.dreams!.map(dream => dreams.push({
+                title: dream.title,
+                description: dream.description,
+                dreamPointOfViewId: dream.dreamPointOfViewId,
+                climate: {
+                    ameno: dream.climate.ameno,
+                    calor: dream.climate.calor,
+                    garoa: dream.climate.garoa,
+                    chuva: dream.climate.chuva,
+                    tempestade: dream.climate.tempestade,
+                    nevoa: dream.climate.nevoa,
+                    neve: dream.climate.neve,
+                    multiplos: dream.climate.multiplos,
+                    outro: dream.climate.outro,
+                    indefinido: dream.climate.indefinido,
+                },
+                dreamHourId: dream.dreamHourId,
+                dreamDurationId: dream.dreamDurationId,
+                dreamLucidityLevelId: dream.dreamLucidityLevelId,
+                dreamTypeId: dream.dreamTypeId,
+                dreamRealityLevelId: dream.dreamRealityLevelId,
+                eroticDream: dream.eroticDream,
+                hiddenDream: dream.hiddenDream,
+                personalAnalysis: dream.personalAnalysis ?? "",
+                sleepId: 0,
+                dreamOriginId: 1
+            }))
+        }
+
         await this.sleepService.Create({
             userId: sleep.userId,
             date: DateTime.fromJSDate(sleep.date),
@@ -23,6 +56,7 @@ export default class SleepController {
             wakeUpHumor: sleep.wakeUpHumor,
             layDownHumor: sleep.layDownHumor,
             biologicalOccurences: sleep.biologicalOccurences,
+            dreams: dreams
         })
         response.status(201).json("Sono criado com sucesso.")
     }

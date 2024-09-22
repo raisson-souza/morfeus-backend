@@ -1,19 +1,40 @@
 import { Pagination } from "../types/pagiation.js"
-import { SleepInput, SleepOutput } from "../types/sleepTypes.js"
+import { SleepCreationInput, SleepInput, SleepOutput } from "../types/sleepTypes.js"
 import CustomException from "#exceptions/custom_exception"
 import db from "@adonisjs/lucid/services/db"
+import Dream from "#models/dream"
 import Sleep from "#models/sleep"
 import SleepServiceProps from "./types/sleep_service_props.js"
 import User from "#models/user"
 
 export default class SleepService implements SleepServiceProps {
-    async Create(sleep: SleepInput, validate = true) : Promise<Sleep> {
+    async Create(sleep: SleepCreationInput, validate = true) : Promise<Sleep> {
         const userExists = await User.find(sleep.userId)
         if (!userExists) throw new CustomException(404, "Usuário inexistente para a criação do sono.")
 
+        if (sleep.dreams.length > 3) throw new CustomException(400, "Apenas 3 sonhos podem ser cadastrados durante o cadastro de um sono.")
+
         return await db.transaction(async (trx) => {
             if (validate) await this.Validate(sleep)
-            return await Sleep.create(sleep, { client: trx })
+            const sleepModel: SleepInput = {
+                userId: sleep.userId,
+                date: sleep.date,
+                sleepTime: sleep.sleepTime,
+                sleepStart: sleep.sleepStart,
+                sleepEnd: sleep.sleepEnd,
+                wakeUpHumor: sleep.wakeUpHumor,
+                layDownHumor: sleep.layDownHumor,
+                biologicalOccurences: sleep.biologicalOccurences,
+            }
+            const newSleep = await Sleep.create(sleepModel, { client: trx })
+
+            if (sleep.dreams.length > 0) {
+                // É populado o ID do sono referente
+                sleep.dreams.map((_, i) => { sleep.dreams[i].sleepId = newSleep.id })
+                await Dream.createMany(sleep.dreams, { client: trx })
+            }
+
+            return newSleep
         })
     }
 
