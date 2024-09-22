@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="yAOtjO7acrzMtTtR3ksc" name="Page-1">
-        <mxGraphModel dx="1905" dy="1716" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="1629" dy="1743" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -45,7 +45,7 @@
                         <mxPoint x="3" y="29" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="33" value="Anexar sonho" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                <mxCell id="33" value="Criar sonhos" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="435" y="170" width="130" height="80" as="geometry"/>
                 </mxCell>
                 <mxCell id="40" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="36" target="28" edge="1">
@@ -61,7 +61,7 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="37" value="Fluxo cadastro de sonho" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                <mxCell id="37" value="Fluxo cadastro de sonhos completo" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="565" y="280" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="42" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="41" target="10" edge="1">
@@ -69,6 +69,9 @@
                 </mxCell>
                 <mxCell id="41" value="Botão de criação de sono" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="440" y="-170" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="47" value="Ao criar um sono, somente é possível criar 3 sonhos completos." style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="700" y="295" width="360" height="30" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
