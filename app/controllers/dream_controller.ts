@@ -31,6 +31,7 @@ export default class DreamController {
             dreamOriginId: 1,
             date: dream.date === undefined ? DateTime.now() : DateTime.fromJSDate(dream.date),
             userId: dream.userId,
+            tags: dream.tags
         })
         response.status(201).json("Sonho criado com sucesso.")
     }
@@ -38,7 +39,7 @@ export default class DreamController {
     async createUncomplete({ request, response }: HttpContext) : Promise<void> {
         const dream = await request.validateUsing(createUncompleteDreamValidator)
         await this.dreamService.CreateUncomplete({
-            sleepId: dream.sleepId ?? 0,
+            sleepId: 0,
             title: dream.title,
             description: dream.description,
             dreamPointOfViewId: dream.dreamPointOfViewId ?? 1,
@@ -98,6 +99,7 @@ export default class DreamController {
             hiddenDream: dream.hiddenDream,
             personalAnalysis: dream.personalAnalysis ?? "",
             dreamOriginId: 1,
+            tags: dream.tags
         })
         response.status(201).json("Sonho atualizado com sucesso.")
     }

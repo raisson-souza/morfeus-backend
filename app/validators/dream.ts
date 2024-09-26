@@ -28,17 +28,16 @@ export const createCompleteDreamValidator = vine.compile(
         eroticDream: vine.boolean(),
         hiddenDream: vine.boolean(),
         personalAnalysis: vine.string().optional(),
-        /** Data opcional caso sonho completo não tenha sono referente */
+        tags: vine.array(vine.string()),
+        /** Informações para criação de sono caso sleep_id não seja informado */
         date: vine.date({ formats: ['YYYY/MM/DD', 'YYYY-MM-DD'] }).optional(),
-        userId: vine.number(),
+        userId: vine.number().optional(),
     })
 )
 
 /** Valida a criação de um sonho incompleto (rápido ou importado) */
 export const createUncompleteDreamValidator = vine.compile(
     vine.object({
-        /** Sono referente é opcional pois o sonho pode criar o sono */
-        sleepId: vine.number().optional(),
         title: vine.string(),
         description: vine.string(),
         dreamPointOfViewId: vine.number().optional(),
@@ -52,8 +51,7 @@ export const createUncompleteDreamValidator = vine.compile(
         hiddenDream: vine.boolean().optional(),
         personalAnalysis: vine.string().optional(),
         dreamOriginId: vine.number(),
-        /** Data opcional caso sonho completo não tenha sono referente */
-        date: vine.date({ formats: ['YYYY/MM/DD', 'YYYY-MM-DD'] }).optional(),
+        date: vine.date({ formats: ['YYYY/MM/DD', 'YYYY-MM-DD'] }),
         userId: vine.number(),
     })
 )
@@ -86,5 +84,6 @@ export const updateCompleteDreamValidator = vine.compile(
         eroticDream: vine.boolean(),
         hiddenDream: vine.boolean(),
         personalAnalysis: vine.string().optional(),
+        tags: vine.array(vine.string())
     })
 )

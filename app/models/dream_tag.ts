@@ -12,13 +12,15 @@ export default class DreamTag extends BaseModel {
   @belongsTo(() => Dream)
   declare dream: BelongsTo<typeof Dream>
 
-  get dreamId() { return this.dream.id }
+  @column()
+  declare dreamId: number
 
   /** Tag */
   @belongsTo(() => Tag)
   declare tag: BelongsTo<typeof Tag>
 
-  get tagId() { return this.tag.id }
+  @column()
+  declare tagId: number
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

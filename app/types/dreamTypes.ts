@@ -22,12 +22,20 @@ export type DreamOutput = {
     id : number
 } & DreamInput
 
-export type DreamCompleteInput = {
+type BaseDreamCompleteInput = {
     date?: DateTime
     userId?: number
 } & DreamInput
 
-export type DreamUncompleteInput = DreamCompleteInput
+export type DreamCompleteInput = {
+    tags: string[]
+} & BaseDreamCompleteInput
+
+export type DreamUncompleteInput = BaseDreamCompleteInput
+
+export type DreamCompleteUpdateInput = {
+    tags: string[]
+} & DreamOutput
 
 export const dreamInputModel: DreamInput = {
     sleepId: 0,
