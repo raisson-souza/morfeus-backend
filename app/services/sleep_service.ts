@@ -1,10 +1,15 @@
+import { DreamTagInput } from "../types/DreamTagTypes.js"
 import { Pagination } from "../types/pagiation.js"
 import { SleepCreationInput, SleepInput, SleepOutput } from "../types/sleepTypes.js"
+import { TagInput } from "../types/TagTypes.js"
+import { TransactionClientContract } from "@adonisjs/lucid/types/database"
 import CustomException from "#exceptions/custom_exception"
 import db from "@adonisjs/lucid/services/db"
 import Dream from "#models/dream"
+import DreamTag from "#models/dream_tag"
 import Sleep from "#models/sleep"
 import SleepServiceProps from "./types/sleep_service_props.js"
+import Tag from "#models/tag"
 import User from "#models/user"
 
 export default class SleepService implements SleepServiceProps {
@@ -28,10 +33,19 @@ export default class SleepService implements SleepServiceProps {
             }
             const newSleep = await Sleep.create(sleepModel, { client: trx })
 
+            // Se há sonhos no sono criado, serão criados também
             if (sleep.dreams.length > 0) {
-                // É populado o ID do sono referente
+                // ID do sono é atribuido a todos os sonhos a serem criados
                 sleep.dreams.map((_, i) => { sleep.dreams[i].sleepId = newSleep.id })
-                await Dream.createMany(sleep.dreams, { client: trx })
+
+                for (const dream of sleep.dreams) {
+                    // Tags do sonho são extraidas do modelo para a criação correta do sonho
+                    const { ["tags"]: dreamTags, ...newDreamModel } = dream
+                    const newDream = await Dream.create(newDreamModel, { client: trx })
+
+                    // Se existem tags nesse sonho, serão criadas
+                    if (dreamTags.length > 0) await this.CreateTags(dreamTags, newDream.id, trx)
+                }
             }
 
             return newSleep
@@ -113,5 +127,36 @@ export default class SleepService implements SleepServiceProps {
             .where('user_id', userId)
             .orderBy(orderBy, orderByDirection as any)
             .paginate(page, limit)
+    }
+
+    private async CreateTags(tags: string[], dreamId: number, trx: TransactionClientContract): Promise<void> {
+        if (tags.length === 0) return
+
+        for (const tag of tags) {
+            let tagId: null | number = null
+            await Tag.findBy('title', tag.toLowerCase(), { client: trx })
+                .then(result => { if (result) tagId = result.id})
+
+            if (!tagId) {
+                const tagModel: TagInput = { title: tag.toLowerCase() }
+                const newTag = await Tag.create(tagModel, { client: trx })
+                tagId = newTag.id
+            }
+
+            const isTagAttached = await DreamTag
+                .query({ client: trx })
+                .where('tag_id', tagId)
+                .andWhere('dream_id', dreamId)
+                .select('id')
+                .then(tagsAttached => tagsAttached.length > 0)
+
+            if (!isTagAttached) {
+                const dreamTagModel: DreamTagInput = {
+                    dreamId: dreamId,
+                    tagId: tagId
+                }
+                await DreamTag.create(dreamTagModel, { client: trx })
+            }
+        }
     }
 }

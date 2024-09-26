@@ -1,6 +1,6 @@
 import { BiologicalOccurencesType } from "./biologicalOccurences.js"
+import { CreateSleepWithDreamInput } from "./dreamTypes.js"
 import { DateTime } from "luxon"
-import { DreamInput } from "./dreamTypes.js"
 import { SleepHumorType } from "./sleepHumor.js"
 
 export type SleepInput = {
@@ -19,7 +19,7 @@ export type SleepOutput = {
 } & SleepInput
 
 export type SleepCreationInput = {
-    dreams: DreamInput[]
+    dreams: CreateSleepWithDreamInput[]
 } & SleepInput
 
 export const sleepInputModel : SleepInput = {

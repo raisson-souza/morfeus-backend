@@ -37,6 +37,10 @@ export type DreamCompleteUpdateInput = {
     tags: string[]
 } & DreamOutput
 
+export type CreateSleepWithDreamInput = {
+    tags: string[]
+} & DreamInput
+
 export const dreamInputModel: DreamInput = {
     sleepId: 0,
     title: "",

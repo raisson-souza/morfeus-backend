@@ -1,6 +1,6 @@
 import { createSleepValidator, updateSleepValidator } from '#validators/sleep'
+import { CreateSleepWithDreamInput } from '../types/dreamTypes.js'
 import { DateTime } from 'luxon'
-import { DreamInput } from '../types/dreamTypes.js'
 import { inject } from '@adonisjs/core'
 import { ModelPaginatorContract } from '@adonisjs/lucid/types/model'
 import { paginationValidator } from '#validators/system'
@@ -15,7 +15,7 @@ export default class SleepController {
 
     async create({ request, response }: HttpContext) : Promise<void> {
         const sleep = await request.validateUsing(createSleepValidator)
-        const dreams: DreamInput[] = []
+        const dreams: CreateSleepWithDreamInput[] = []
 
         if (sleep.dreams != undefined && sleep.dreams.length > 0) {
             sleep.dreams!.map(dream => dreams.push({
@@ -43,7 +43,8 @@ export default class SleepController {
                 hiddenDream: dream.hiddenDream,
                 personalAnalysis: dream.personalAnalysis ?? "",
                 sleepId: 0,
-                dreamOriginId: 1
+                dreamOriginId: 1,
+                tags: dream.tags
             }))
         }
 
@@ -56,7 +57,7 @@ export default class SleepController {
             wakeUpHumor: sleep.wakeUpHumor,
             layDownHumor: sleep.layDownHumor,
             biologicalOccurences: sleep.biologicalOccurences,
-            dreams: dreams
+            dreams: dreams,
         })
         response.status(201).json("Sono criado com sucesso.")
     }
