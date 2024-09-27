@@ -38,6 +38,7 @@ export default class DreamService implements DreamServiceProps {
             hiddenDream: dream.hiddenDream,
             personalAnalysis: dream.personalAnalysis,
             dreamOriginId: dream.dreamOriginId,
+            isComplete: true,
         }
 
         await db.transaction(async (trx) => {
@@ -113,6 +114,7 @@ export default class DreamService implements DreamServiceProps {
                 hiddenDream: dream.hiddenDream,
                 personalAnalysis: dream.personalAnalysis,
                 dreamOriginId: dream.dreamOriginId,
+                isComplete: false,
             }
             return await Dream.create(createDreamModel, { client: trx })
         })
@@ -141,6 +143,7 @@ export default class DreamService implements DreamServiceProps {
                 hiddenDream: dream.hiddenDream,
                 personalAnalysis: dream.personalAnalysis,
                 dreamOriginId: dream.dreamOriginId,
+                isComplete: true,
             }
             if (validate) await this.Validate(updateDreamModel)
             const newDream = await Dream.updateOrCreate({ id: dream.id }, updateDreamModel, { client: trx })

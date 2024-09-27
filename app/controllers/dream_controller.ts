@@ -31,7 +31,8 @@ export default class DreamController {
             dreamOriginId: 1,
             date: dream.date === undefined ? DateTime.now() : DateTime.fromJSDate(dream.date),
             userId: dream.userId,
-            tags: dream.tags
+            tags: dream.tags,
+            isComplete: true,
         })
         response.status(201).json("Sonho criado com sucesso.")
     }
@@ -65,7 +66,8 @@ export default class DreamController {
             personalAnalysis: dream.personalAnalysis ?? "",
             dreamOriginId: dream.dreamOriginId,
             date: dream.date === undefined ? DateTime.now() : DateTime.fromJSDate(dream.date),
-            userId: dream.userId ?? 0
+            userId: dream.userId ?? 0,
+            isComplete: false,
         })
         response.status(201).json("Sonho criado com sucesso.")
     }
@@ -99,7 +101,8 @@ export default class DreamController {
             hiddenDream: dream.hiddenDream,
             personalAnalysis: dream.personalAnalysis ?? "",
             dreamOriginId: 1,
-            tags: dream.tags
+            tags: dream.tags,
+            isComplete: true,
         })
         response.status(201).json("Sonho atualizado com sucesso.")
     }

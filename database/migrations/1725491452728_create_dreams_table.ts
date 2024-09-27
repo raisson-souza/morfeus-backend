@@ -34,6 +34,7 @@ export default class extends BaseSchema {
       table.boolean('hidden_dream').defaultTo(false)
       table.string('personal_analysis')
       table.integer('dream_origin_id').unsigned().references('id').inTable('dream_origins').onDelete('CASCADE').notNullable()
+      table.boolean('is_complete').defaultTo(false)
       table.timestamp('created_at').defaultTo(this.db.rawQuery('now()').knexQuery)
       table.timestamp('updated_at')
     })

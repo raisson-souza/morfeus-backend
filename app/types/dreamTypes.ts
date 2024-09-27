@@ -16,6 +16,7 @@ export type DreamInput = {
     hiddenDream: boolean
     personalAnalysis: string
     dreamOriginId: number
+    isComplete: boolean
 }
 
 export type DreamOutput = {
@@ -67,4 +68,5 @@ export const dreamInputModel: DreamInput = {
     hiddenDream: false,
     personalAnalysis: "",
     dreamOriginId: 1,
+    isComplete: false,
 }

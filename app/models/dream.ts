@@ -96,6 +96,9 @@ export default class Dream extends BaseModel {
   @column()
   declare dreamOriginId: number
 
+  @column()
+  declare isComplete: boolean
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

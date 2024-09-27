@@ -44,7 +44,8 @@ export default class SleepController {
                 personalAnalysis: dream.personalAnalysis ?? "",
                 sleepId: 0,
                 dreamOriginId: 1,
-                tags: dream.tags
+                tags: dream.tags,
+                isComplete: true,
             }))
         }
 
