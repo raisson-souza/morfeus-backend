@@ -32,13 +32,13 @@ router
         // Sonos do usuário
         router
           .group(() => { router.get('/list', [sleepController, 'listByUser']) })
-          .prefix('/:id/sleeps')
+          .prefix('/sleeps')
           .use(middleware.auth({ guards: ['api'] }))
 
         // Sonhos do usuário
         router
           .group(() => { router.get('/list', [dreamController, 'listByUser']) })
-          .prefix('/:id/dreams')
+          .prefix('/dreams')
           .use(middleware.auth({ guards: ['api'] }))
       })
       .prefix('/users'),

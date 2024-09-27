@@ -12,7 +12,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 export default class DreamController {
     constructor(protected dreamService : DreamService) { }
 
-    async create({ request, response }: HttpContext) : Promise<void> {
+    async create({ request, response, auth }: HttpContext) : Promise<void> {
         const dream = await request.validateUsing(createCompleteDreamValidator)
         await this.dreamService.Create({
             sleepId: dream.sleepId ?? 0,
@@ -30,14 +30,14 @@ export default class DreamController {
             personalAnalysis: dream.personalAnalysis ?? "",
             dreamOriginId: 1,
             date: dream.date === undefined ? DateTime.now() : DateTime.fromJSDate(dream.date),
-            userId: dream.userId,
+            userId:  auth.user!.id,
             tags: dream.tags,
             isComplete: true,
         })
         response.status(201).json("Sonho criado com sucesso.")
     }
 
-    async createUncomplete({ request, response }: HttpContext) : Promise<void> {
+    async createUncomplete({ request, response, auth }: HttpContext) : Promise<void> {
         const dream = await request.validateUsing(createUncompleteDreamValidator)
         await this.dreamService.CreateUncomplete({
             sleepId: 0,
@@ -66,7 +66,7 @@ export default class DreamController {
             personalAnalysis: dream.personalAnalysis ?? "",
             dreamOriginId: dream.dreamOriginId,
             date: dream.date === undefined ? DateTime.now() : DateTime.fromJSDate(dream.date),
-            userId: dream.userId ?? 0,
+            userId:  auth.user!.id,
             isComplete: false,
         })
         response.status(201).json("Sonho criado com sucesso.")
@@ -125,12 +125,11 @@ export default class DreamController {
         response.status(201).json("Sonho deletado com sucesso.")
     }
 
-    async listByUser({ params, request }: HttpContext): Promise<ModelPaginatorContract<Dream>> {
-        const { id } = params
+    async listByUser({ request, auth }: HttpContext): Promise<ModelPaginatorContract<Dream>> {
         const { page, limit = 10, orderBy = "id", orderByDirection = "desc" } = await request.validateUsing(paginationValidator)
         return this.dreamService.ListByUser(
             { page, limit, orderBy, orderByDirection: orderByDirection as any },
-            id
+            auth.user!.id
         )
     }
 }

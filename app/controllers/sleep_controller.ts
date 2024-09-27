@@ -13,7 +13,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 export default class SleepController {
     constructor(protected sleepService : SleepService) { }
 
-    async create({ request, response }: HttpContext) : Promise<void> {
+    async create({ request, response, auth }: HttpContext) : Promise<void> {
         const sleep = await request.validateUsing(createSleepValidator)
         const dreams: CreateSleepWithDreamInput[] = []
 
@@ -50,9 +50,9 @@ export default class SleepController {
         }
 
         await this.sleepService.Create({
-            userId: sleep.userId,
+            userId: auth.user!.id,
             date: DateTime.fromJSDate(sleep.date),
-            sleepTime: sleep.userId,
+            sleepTime: sleep.sleepTime,
             sleepStart: DateTime.fromJSDate(sleep.sleepStart),
             sleepEnd: DateTime.fromJSDate(sleep.sleepEnd),
             wakeUpHumor: sleep.wakeUpHumor,
@@ -63,13 +63,13 @@ export default class SleepController {
         response.status(201).json("Sono criado com sucesso.")
     }
 
-    async update({ request, response }: HttpContext) : Promise<void> {
+    async update({ request, response, auth }: HttpContext) : Promise<void> {
         const sleep = await request.validateUsing(updateSleepValidator)
         await this.sleepService.Update({
-            userId: sleep.userId,
+            userId: auth.user!.id,
             id: sleep.id,
             date: DateTime.fromJSDate(sleep.date),
-            sleepTime: sleep.userId,
+            sleepTime: sleep.sleepTime,
             sleepStart: DateTime.fromJSDate(sleep.sleepStart),
             sleepEnd: DateTime.fromJSDate(sleep.sleepEnd),
             wakeUpHumor: sleep.wakeUpHumor,
@@ -97,12 +97,11 @@ export default class SleepController {
         response.status(201).json("Sono deletado com sucesso.")
     }
 
-    async listByUser({ params, request }: HttpContext): Promise<ModelPaginatorContract<Sleep>> {
-        const { id } = params
+    async listByUser({ request, auth }: HttpContext): Promise<ModelPaginatorContract<Sleep>> {
         const { page, limit = 10, orderBy = "id", orderByDirection = "desc" } = await request.validateUsing(paginationValidator)
         return this.sleepService.ListByUser(
             { page, limit, orderBy, orderByDirection: orderByDirection as any },
-            id
+            auth.user!.id
         )
     }
 }

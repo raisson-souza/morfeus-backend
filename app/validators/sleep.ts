@@ -3,7 +3,6 @@ import vine from '@vinejs/vine'
 /** Valida a criação de um sono */
 export const createSleepValidator = vine.compile(
     vine.object({
-        userId: vine.number(),
         date: vine.date({ formats: ['YYYY/MM/DD', 'YYYY-MM-DD'] }),
         sleepTime: vine.number(),
         sleepStart: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] }),
@@ -82,7 +81,6 @@ export const createSleepValidator = vine.compile(
 export const updateSleepValidator = vine.compile(
     vine.object({
         id: vine.number(),
-        userId: vine.number(),
         date: vine.date({ formats: ['YYYY/MM/DD', 'YYYY-MM-DD'] }),
         sleepTime: vine.number(),
         sleepStart: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] }),

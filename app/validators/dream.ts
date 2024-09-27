@@ -31,7 +31,6 @@ export const createCompleteDreamValidator = vine.compile(
         tags: vine.array(vine.string()),
         /** Informações para criação de sono caso sleep_id não seja informado */
         date: vine.date({ formats: ['YYYY/MM/DD', 'YYYY-MM-DD'] }).optional(),
-        userId: vine.number().optional(),
     })
 )
 
@@ -52,7 +51,6 @@ export const createUncompleteDreamValidator = vine.compile(
         personalAnalysis: vine.string().optional(),
         dreamOriginId: vine.number(),
         date: vine.date({ formats: ['YYYY/MM/DD', 'YYYY-MM-DD'] }),
-        userId: vine.number(),
     })
 )
 

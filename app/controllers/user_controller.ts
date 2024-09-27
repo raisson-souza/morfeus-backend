@@ -17,9 +17,14 @@ export default class UserController {
         response.status(201).json("Usuário criado com sucesso.")
     }
 
-    async update({ request, response }: HttpContext) : Promise<void> {
+    async update({ request, response, auth }: HttpContext) : Promise<void> {
         const user = await request.validateUsing(updateUserValidator)
-        await this.userService.Update(user)
+        await this.userService.Update({
+            fullName: user.fullName,
+            email: user.email,
+            password: user.password,
+            id: auth.user!.id
+        })
         response.status(201).json("Usuário atualizado com sucesso.")
     }
 
