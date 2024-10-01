@@ -42,6 +42,13 @@ export type CreateSleepWithDreamInput = {
     tags: string[]
 } & DreamInput
 
+export type DreamWithTags = {
+    tags: {
+        tagId: number
+        tagTitle: string
+    }[]
+} & DreamInput
+
 export const dreamInputModel: DreamInput = {
     sleepId: 0,
     title: "",

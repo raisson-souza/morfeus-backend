@@ -1,5 +1,6 @@
-import { createCompleteDreamValidator, createUncompleteDreamValidator, updateCompleteDreamValidator } from '#validators/dream'
+import { createCompleteDreamValidator, createUncompleteDreamValidator, listDreamBySleepValidator, updateCompleteDreamValidator } from '#validators/dream'
 import { DateTime } from 'luxon'
+import { DreamWithTags } from '../types/dreamTypes.js'
 import { inject } from "@adonisjs/core"
 import { ModelPaginatorContract } from '@adonisjs/lucid/types/model'
 import { paginationValidator } from '#validators/system'
@@ -131,5 +132,11 @@ export default class DreamController {
             { page, limit, orderBy, orderByDirection: orderByDirection as any },
             auth.user!.id
         )
+    }
+
+    async listBySleep({ request, response }: HttpContext): Promise<DreamWithTags[]> {
+        const { sleep_id, date } = await request.validateUsing(listDreamBySleepValidator)
+        if (!sleep_id && !date) response.status(400).json("É necessário informar o ID do sono ou a data do sono.")
+        return await this.dreamService.ListDreamsBySleep(sleep_id, (date != undefined ? DateTime.fromJSDate(date) : DateTime.now()))
     }
 }

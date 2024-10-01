@@ -1,5 +1,5 @@
 import { DateTime } from "luxon"
-import { DreamCompleteInput, DreamCompleteUpdateInput, DreamInput, DreamUncompleteInput } from "../types/dreamTypes.js"
+import { DreamCompleteInput, DreamCompleteUpdateInput, DreamInput, DreamUncompleteInput, DreamWithTags } from "../types/dreamTypes.js"
 import { DreamTagInput } from "../types/DreamTagTypes.js"
 import { inject } from "@adonisjs/core"
 import { ModelPaginatorContract } from "@adonisjs/lucid/types/model"
@@ -222,5 +222,67 @@ export default class DreamService implements DreamServiceProps {
                 await DreamTag.create(dreamTagModel, { client: trx })
             }
         }
+    }
+
+    async ListDreamsBySleep(sleepId?: number, date?: DateTime): Promise<DreamWithTags[]> {
+        const dreams: DreamWithTags[] = []
+        let foundSleepId: number | null = null
+
+        // Procura-se sono pelo sleepId
+        if (sleepId) {
+            const sleepIdById = await Sleep.find(sleepId)
+                .then(result => { return result?.id })
+            if (!sleepIdById) throw new CustomException(404, "Sono não encontrado.")
+            foundSleepId = sleepIdById
+        }
+
+        // Procura-se sono pela data
+        if (!foundSleepId && date) {
+            const sleepIdByDate = await Sleep.findBy("date", date)
+                .then(result => { return result?.id })
+            if (!sleepIdByDate) throw new CustomException(404, "Sono não encontrado.")
+            foundSleepId = sleepIdByDate
+        }
+
+        // Procuramos os sonhos do sono
+        const foundDreams = await Dream.query()
+            .where("sleep_id", foundSleepId!)
+
+        for (const dream of foundDreams) {
+            // Capturadas as tags do sonho
+            const tags: { tagId: number, tagTitle: string }[] = await Tag.query()
+                .innerJoin("dream_tags", "dream_tags.tag_id", "tags.id")
+                .where("dream_id", dream.id)
+                .then(tags => {
+                    return tags.map(tag => {
+                        return {
+                            tagId: tag.id,
+                            tagTitle: tag.title
+                        }
+                    })
+                })
+
+            // Montado o tipo do sonho com as tags
+            dreams.push({
+                sleepId: dream.sleepId,
+                title: dream.title,
+                description: dream.description,
+                dreamPointOfViewId: dream.dreamPointOfViewId,
+                climate: dream.climate,
+                dreamHourId: dream.dreamDurationId,
+                dreamDurationId: dream.dreamDurationId,
+                dreamLucidityLevelId: dream.dreamLucidityLevelId,
+                dreamTypeId: dream.dreamTypeId,
+                dreamRealityLevelId: dream.dreamRealityLevelId,
+                eroticDream: dream.eroticDream,
+                hiddenDream: dream.hiddenDream,
+                personalAnalysis: dream.personalAnalysis,
+                dreamOriginId: dream.dreamOriginId,
+                isComplete: dream.isComplete,
+                tags: tags
+            })
+        }
+
+        return dreams
     }
 }

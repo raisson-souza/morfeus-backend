@@ -62,6 +62,7 @@ router
         router.post('/uncomplete', [dreamController, 'createUncomplete']),
         router.put('/', [dreamController, 'update']),
         router.get('/list', [dreamController, 'list']),
+        router.get('/listBySleep', [dreamController, 'listBySleep']),
         router.get('/:id', [dreamController, 'get'])
         router.delete('/:id', [dreamController, 'delete'])
       })
