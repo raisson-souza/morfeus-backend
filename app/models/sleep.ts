@@ -10,13 +10,6 @@ export default class Sleep extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  /** Usuário do sono */
-  @belongsTo(() => User)
-  declare user: BelongsTo<typeof User>
-
-  @column()
-  declare userId: number
-
   /** Data do sono */
   @column.date()
   declare date: DateTime
@@ -50,6 +43,13 @@ export default class Sleep extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+
+  /** Usuário do sono */
+  @belongsTo(() => User)
+  declare user: BelongsTo<typeof User>
+
+  @column()
+  declare userId: number
 
   /** Sonhos do sono */
   @hasMany(() => Dream)

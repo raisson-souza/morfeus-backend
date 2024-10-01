@@ -8,6 +8,9 @@ export default class DreamTag extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+
   /** Sonho */
   @belongsTo(() => Dream)
   declare dream: BelongsTo<typeof Dream>
@@ -21,7 +24,4 @@ export default class DreamTag extends BaseModel {
 
   @column()
   declare tagId: number
-
-  @column.dateTime({ autoCreate: true })
-  declare createdAt: DateTime
 }

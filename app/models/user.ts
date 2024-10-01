@@ -34,8 +34,6 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
 
-  static accessTokens = DbAccessTokensProvider.forModel(User)
-
   /** Sonos */
   @hasMany(() => Sleep)
   declare sleeps: HasMany<typeof Sleep>
@@ -47,4 +45,6 @@ export default class User extends compose(BaseModel, AuthFinder) {
   /** Análises de sonho */
   @hasMany(() => DreamAnalysis)
   declare dreamsAnalysis: HasMany<typeof DreamAnalysis>
+
+  static accessTokens = DbAccessTokensProvider.forModel(User)
 }

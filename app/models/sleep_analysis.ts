@@ -7,9 +7,6 @@ export default class SleepAnalysis extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare updatedAt: DateTime
-
   /** É análise mensal */
   @column()
   declare isMonthAnalysis: boolean
@@ -85,6 +82,9 @@ export default class SleepAnalysis extends BaseModel {
   /** Data de maior quantidade de sonho por noite */
   @column.date()
   declare mostDreamsPerSleepDate: DateTime
+
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
 
   /** Usuário */
   @belongsTo(() => User)

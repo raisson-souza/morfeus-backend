@@ -7,9 +7,6 @@ export default class DreamAnalysis extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare updatedAt: DateTime
-
   /** É análise mensal */
   @column()
   declare isMonthAnalysis: boolean
@@ -65,6 +62,9 @@ export default class DreamAnalysis extends BaseModel {
   /** Título do sonho de maior texto (descrição) */
   @column()
   declare longestDreamTitle: string
+
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
 
   /** Usuário */
   @belongsTo(() => User)

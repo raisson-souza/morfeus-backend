@@ -16,13 +16,6 @@ export default class Dream extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  /** Sono referente ao sonho */
-  @belongsTo(() => Sleep)
-  declare sleep: BelongsTo<typeof Sleep>
-
-  @column()
-  declare sleepId: number
-
   /** Título do sonho */
   @column()
   declare title: string
@@ -31,16 +24,45 @@ export default class Dream extends BaseModel {
   @column()
   declare description: string
 
+  /** Clima do sonho */
+  @column()
+  declare climate: DreamClimateType
+
+  /** É sonho erótico */
+  @column()
+  declare eroticDream: boolean
+
+  /** É sonho oculto */
+  @column()
+  declare hiddenDream: boolean
+
+  /** Análise pessoal do sonho */
+  @column()
+  declare personalAnalysis: string
+
+  /** É sonho completo */
+  @column()
+  declare isComplete: boolean
+
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+
+  /** Origem do sonho */
+  @belongsTo(() => DreamOrigin)
+  declare dreamOrigin: BelongsTo<typeof DreamOrigin>
+
+  @column()
+  declare dreamOriginId: number
+
   /** Ponto de vista do sonho */
   @belongsTo(() => DreamPointOfView)
   declare dreamPointOfView: BelongsTo<typeof DreamPointOfView>
 
   @column()
   declare dreamPointOfViewId: number
-
-  /** Clima do sonho */
-  @column()
-  declare climate: DreamClimateType
 
   /** Hora do sonho */
   @belongsTo(() => DreamHour)
@@ -77,33 +99,12 @@ export default class Dream extends BaseModel {
   @column()
   declare dreamRealityLevelId: number
 
-  /** É sonho erótico */
-  @column()
-  declare eroticDream: boolean
-
-  /** É sonho oculto */
-  @column()
-  declare hiddenDream: boolean
-
-  /** Análise pessoal do sonho */
-  @column()
-  declare personalAnalysis: string
-
-  /** Origem do sonho */
-  @belongsTo(() => DreamOrigin)
-  declare dreamOrigin: BelongsTo<typeof DreamOrigin>
+  /** Sono referente ao sonho */
+  @belongsTo(() => Sleep)
+  declare sleep: BelongsTo<typeof Sleep>
 
   @column()
-  declare dreamOriginId: number
-
-  @column()
-  declare isComplete: boolean
-
-  @column.dateTime({ autoCreate: true })
-  declare createdAt: DateTime
-
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare updatedAt: DateTime
+  declare sleepId: number
 
   /** Relações dreamTag do sonho */
   @hasMany(() => DreamTag)
