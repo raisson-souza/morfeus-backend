@@ -1,0 +1,111 @@
+<mxfile host="65bd71144e">
+    <diagram id="np7KG_UPq-T18D6y6COZ" name="Page-1">
+        <mxGraphModel dx="1916" dy="1101" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="26" value="BANCO DE DADOS&lt;br&gt;MOBILE" style="shape=umlFrame;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="510" y="740" width="480" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="2" value="FRONTEND" style="shape=umlFrame;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="160" width="390" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="16" style="edgeStyle=none;html=1;startArrow=classic;startFill=1;" parent="1" source="3" target="6" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="29" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;startArrow=classic;startFill=1;endArrow=classic;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="3" target="14" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="680" y="260"/>
+                            <mxPoint x="680" y="360"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="30" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;startArrow=classic;startFill=1;endArrow=classic;endFill=1;entryPerimeter=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="3" target="31" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="880" y="260"/>
+                        </Array>
+                        <mxPoint x="990" y="250" as="targetPoint"/>
+                        <mxPoint x="520" y="210" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="3" value="MOBILE&lt;br&gt;REACT NATIVE TS (Expo)" style="html=1;dropTarget=0;" parent="1" vertex="1">
+                    <mxGeometry x="185" y="215" width="180" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" parent="3" vertex="1">
+                    <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+                        <mxPoint x="-27" y="7" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="5" value="BACKEND" style="shape=umlFrame;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="400" width="390" height="300" as="geometry"/>
+                </mxCell>
+                <mxCell id="17" style="edgeStyle=none;html=1;startArrow=classic;startFill=1;" parent="1" source="6" target="8" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="API" style="html=1;dropTarget=0;" parent="1" vertex="1">
+                    <mxGeometry x="185" y="440" width="180" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" parent="6" vertex="1">
+                    <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+                        <mxPoint x="-27" y="7" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="18" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" parent="1" source="8" target="39" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="285" y="915" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="8" value="LÓGICA DE&lt;br&gt;NEGÓCIO&lt;br&gt;NODE TS (Adonis)" style="html=1;dropTarget=0;" parent="1" vertex="1">
+                    <mxGeometry x="185" y="572" width="180" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" parent="8" vertex="1">
+                    <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+                        <mxPoint x="-27" y="7" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="10" value="BANCO DE DADOS" style="shape=umlFrame;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="740" width="390" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="14" value="REPOSITÓRIO LOCAL" style="html=1;dropTarget=0;" parent="1" vertex="1">
+                    <mxGeometry x="590" y="800" width="180" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" parent="14" vertex="1">
+                    <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+                        <mxPoint x="-27" y="7" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="25" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;O dispositivo mobile tem acesso ao banco de dados SQL lite e do&lt;br&gt;repositório local do celular devido às funcionalidades offline,&lt;br&gt;podendo estes dados serem sincronizados quando estiver&lt;br&gt;conectado à rede.&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="510" y="940" width="490" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="31" value="SQL lite" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" parent="1" vertex="1">
+                    <mxGeometry x="840" y="800" width="80" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="39" value="POSTGRES" style="html=1;dropTarget=0;" parent="1" vertex="1">
+                    <mxGeometry x="185" y="815" width="180" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="40" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" parent="39" vertex="1">
+                    <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+                        <mxPoint x="-27" y="7" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="38" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image;image=img/lib/allied_telesis/storage/Datacenter_Server_Half_Rack_ToR.svg;" parent="1" vertex="1">
+                    <mxGeometry x="315" y="760" width="88.2" height="114.6" as="geometry"/>
+                </mxCell>
+                <mxCell id="41" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image;image=img/lib/allied_telesis/computer_and_terminals/Server_Desktop.svg;" parent="1" vertex="1">
+                    <mxGeometry x="320.53" y="540" width="63.11" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="42" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image;image=img/lib/allied_telesis/computer_and_terminals/Smartphone.svg;" parent="1" vertex="1">
+                    <mxGeometry x="329.16" y="170" width="41.26" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="47" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image;image=img/lib/allied_telesis/computer_and_terminals/Smartphone.svg;" parent="1" vertex="1">
+                    <mxGeometry x="730" y="750" width="41.26" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="48" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image;image=img/lib/allied_telesis/computer_and_terminals/Server_Desktop.svg;" parent="1" vertex="1">
+                    <mxGeometry x="320.53" y="410" width="63.11" height="80" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
