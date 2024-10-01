@@ -129,6 +129,9 @@ export default class SleepService implements SleepServiceProps {
             .paginate(page, limit)
     }
 
+    /**
+     * Método replicado de DreamService para evitar recursão de injeção de dependência.
+     */
     private async CreateTags(tags: string[], dreamId: number, trx: TransactionClientContract): Promise<void> {
         if (tags.length === 0) return
 

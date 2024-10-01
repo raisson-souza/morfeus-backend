@@ -85,6 +85,7 @@ export default class DreamService implements DreamServiceProps {
             const sleepExists = await Sleep.findBy('date', dream.date)
             let sleepId: number | null = null
 
+            // Se o sono não existe, é criado
             if (!sleepExists) {
                 const createSleepModel: SleepInput = {
                     ...sleepInputModel,
@@ -198,15 +199,18 @@ export default class DreamService implements DreamServiceProps {
 
         for (const tag of tags) {
             let tagId: null | number = null
+            // Procura se a tag já existe
             await Tag.findBy('title', tag.toLowerCase(), { client: trx })
                 .then(result => { if (result) tagId = result.id})
 
+            // Se a tag não existe, cria uma nova
             if (!tagId) {
                 const tagModel: TagInput = { title: tag.toLowerCase() }
                 const newTag = await Tag.create(tagModel, { client: trx })
                 tagId = newTag.id
             }
 
+            // Verifica se a tag existente ou recém criada já está anexada no sonho
             const isTagAttached = await DreamTag
                 .query({ client: trx })
                 .where('tag_id', tagId)
@@ -214,6 +218,7 @@ export default class DreamService implements DreamServiceProps {
                 .select('id')
                 .then(tagsAttached => tagsAttached.length > 0)
 
+            // Anexa a tag ao sonho se não estiver anexada
             if (!isTagAttached) {
                 const dreamTagModel: DreamTagInput = {
                     dreamId: dreamId,

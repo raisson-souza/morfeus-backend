@@ -5,5 +5,6 @@ import BaseProps from "./base_props.js"
 import Sleep from "#models/sleep"
 
 export default interface SleepServiceProps extends BaseProps<Sleep, SleepCreationInput, SleepOutput> {
+    /** Lista sonos pelo usuário */
     ListByUser(pagination: Pagination, userId: number): Promise<ModelPaginatorContract<Sleep>>
 }
