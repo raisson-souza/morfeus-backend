@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="lGCFQGRZhw7MTTtFVWTq" name="Page-1">
-        <mxGraphModel dx="1292" dy="1488" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="2886" dy="2270" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -10,10 +10,10 @@
                 <mxCell id="48" value="- id : Int" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="37" vertex="1">
                     <mxGeometry y="55" width="160" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="53" value="- created : Date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="37" vertex="1">
+                <mxCell id="53" value="- createdAt : Date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="37" vertex="1">
                     <mxGeometry y="75" width="160" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="97" value="- modified : Date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="37" vertex="1">
+                <mxCell id="97" value="- updatedAt : Date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="37" vertex="1">
                     <mxGeometry y="95" width="160" height="20" as="geometry"/>
                 </mxCell>
                 <mxCell id="56" value="- nome : String" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="37" vertex="1">
@@ -72,10 +72,10 @@
                 <mxCell id="50" value="- id : Int" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="49" vertex="1">
                     <mxGeometry y="55" width="180" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="61" value="- created : Date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="49" vertex="1">
+                <mxCell id="61" value="- createdAt : Date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="49" vertex="1">
                     <mxGeometry y="75" width="180" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="99" value="- modified : Date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="49" vertex="1">
+                <mxCell id="99" value="- updatedAt : Date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="49" vertex="1">
                     <mxGeometry y="95" width="180" height="20" as="geometry"/>
                 </mxCell>
                 <mxCell id="68" value="- dreams : DREAMS[]" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="49" vertex="1">
@@ -126,10 +126,10 @@
                 <mxCell id="73" value="- id : Int" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="72" vertex="1">
                     <mxGeometry y="55" width="160" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="96" value="- created : Date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="72" vertex="1">
+                <mxCell id="96" value="- createdAt : Date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="72" vertex="1">
                     <mxGeometry y="75" width="160" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="86" value="- modified : Date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="72" vertex="1">
+                <mxCell id="86" value="- updatedAt : Date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="72" vertex="1">
                     <mxGeometry y="95" width="160" height="20" as="geometry"/>
                 </mxCell>
                 <mxCell id="78" value="- title : String" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="72" vertex="1">
@@ -192,7 +192,7 @@
                 <mxCell id="93" value="- title : String" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="88" vertex="1">
                     <mxGeometry y="75" width="160" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="92" value="- created : Date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="88" vertex="1">
+                <mxCell id="92" value="- createdAt : Date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="88" vertex="1">
                     <mxGeometry y="95" width="160" height="20" as="geometry"/>
                 </mxCell>
                 <mxCell id="95" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="88" vertex="1">
@@ -276,10 +276,10 @@
                 <mxCell id="214" value="- id : Int" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="213" vertex="1">
                     <mxGeometry y="55" width="170" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="215" value="- created : Date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="213" vertex="1">
+                <mxCell id="215" value="- createdAt : Date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="213" vertex="1">
                     <mxGeometry y="75" width="170" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="216" value="- modified : Date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="213" vertex="1">
+                <mxCell id="216" value="- updatedAt : Date" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="213" vertex="1">
                     <mxGeometry y="95" width="170" height="20" as="geometry"/>
                 </mxCell>
                 <mxCell id="230" value="- audioPath : String" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rounded=0;strokeWidth=1;" parent="213" vertex="1">
