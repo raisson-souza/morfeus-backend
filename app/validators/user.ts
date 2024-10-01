@@ -9,6 +9,7 @@ export const createUserValidator = vine.compile(
     })
 )
 
+/** Valida a atualização de um usuário */
 export const updateUserValidator = vine.compile(
     vine.object({
         fullName: vine.string().trim(),
@@ -17,6 +18,7 @@ export const updateUserValidator = vine.compile(
     })
 )
 
+/** Valida o login de um usuário */
 export const loginValidator = vine.compile(
     vine.object({
         email: vine.string().email(),

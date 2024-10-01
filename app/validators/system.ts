@@ -1,5 +1,6 @@
 import vine from '@vinejs/vine'
 
+/** Valida a paginação */
 export const paginationValidator = vine.compile(
     vine.object({
         page: vine.number().min(1).max(99),
