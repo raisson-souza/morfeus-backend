@@ -61,10 +61,18 @@ export default class DreamService implements DreamServiceProps {
                     userId: dream.userId ?? 0,
                     date: dream.date ?? DateTime.now(),
                 }
-                await this.sleepService.Validate(createSleepModel)
-                const sleepCreated = await Sleep.create(createSleepModel, { client: trx })
-                // ID do sono no sonho é populado
-                dreamModel.sleepId = sleepCreated.id
+                // Se o sono não existe, criamos, se existe, encontramos pela data
+                const sleepExists = await this.ValidateSleepCreation(createSleepModel)
+                if (!sleepExists) {
+                    const sleepCreated = await Sleep.create(createSleepModel, { client: trx })
+                    dreamModel.sleepId = sleepCreated.id
+                }
+                else {
+                    await Sleep.findBy("date", createSleepModel.date)
+                        .then(sleep => {
+                            if (sleep) dreamModel.sleepId = sleep.id
+                        })
+                }
 
                 // No caso da criação do sonho sem sono pré-criado, iniciamos uma transação aninhada para lidar com o sonho e as tags
                 await trx.transaction(async (childTrx) => {
@@ -92,7 +100,9 @@ export default class DreamService implements DreamServiceProps {
                     userId: dream.userId ?? 0,
                     date: dream.date ?? DateTime.now(),
                 }
-                await this.sleepService.Validate(createSleepModel)
+                // Aqui não será aproveitado intuito do método ValidateSleepCreation pois buscamos o
+                // sonho pela data em sleepExists acima e já sabemos se existe antes que passe por aqui
+                await this.ValidateSleepCreation(createSleepModel)
                 await Sleep.create(createSleepModel, { client: trx })
                     .then(sleep => { sleepId = sleep.id })
             } else {
@@ -289,5 +299,21 @@ export default class DreamService implements DreamServiceProps {
         }
 
         return dreams
+    }
+
+    /**
+     * Releva a excessão de sono de mesma data já criado do validador sono para a viabilidade de anexação de sonhos novos a sonos já criados ou não
+     * @returns {Promise<boolean>} TRUE se existe sono com mesma data | FALSE se não existe sono com mesma data
+     * */
+    private async ValidateSleepCreation(sleep: SleepInput): Promise<boolean> {
+        try {
+            await this.sleepService.Validate(sleep)
+            return false
+        }
+        catch (ex) {
+            if (ex.message != "Sono de mesma data já cadastrado.")
+                throw new CustomException(ex.status, ex.message)
+            return true
+        }
     }
 }
