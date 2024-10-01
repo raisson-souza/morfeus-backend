@@ -23,25 +23,33 @@ export type DreamOutput = {
     id : number
 } & DreamInput
 
+// TIPOS PERSONALIZADOS
+
+/** Tipo de sonho para criação de sonho completo */
 type BaseDreamCompleteInput = {
     date?: DateTime
     userId?: number
 } & DreamInput
 
+/** Tipo de sonho com tags (apenas título) */
 export type DreamCompleteInput = {
     tags: string[]
 } & BaseDreamCompleteInput
 
+/** Tipo de sonho para criação de sonho não completo */
 export type DreamUncompleteInput = BaseDreamCompleteInput
 
+/** Tipo de sonho com tags (apenas título) para atualização de sonho */
 export type DreamCompleteUpdateInput = {
     tags: string[]
 } & DreamOutput
 
+/** Tipo de sono com tags (apenas título) para criação de sonho dentro da criação de sono */
 export type CreateSleepWithDreamInput = {
     tags: string[]
 } & DreamInput
 
+/** Tipo de sonho integrado com lista de tags */
 export type DreamWithTags = {
     tags: {
         tagId: number

@@ -18,6 +18,9 @@ export type SleepOutput = {
     id : number
 } & SleepInput
 
+// TIPOS PERSONALIZADOS
+
+/** Tipo de sono com sonhos integrados com tags para criação de sono */
 export type SleepCreationInput = {
     dreams: CreateSleepWithDreamInput[]
 } & SleepInput
