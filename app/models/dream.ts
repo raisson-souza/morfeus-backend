@@ -38,7 +38,7 @@ export default class Dream extends BaseModel {
 
   /** Análise pessoal do sonho */
   @column()
-  declare personalAnalysis: string
+  declare personalAnalysis: string | null
 
   /** É sonho completo */
   @column()

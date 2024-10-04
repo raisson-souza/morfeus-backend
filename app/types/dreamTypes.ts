@@ -14,7 +14,7 @@ export type DreamInput = {
     dreamRealityLevelId: number
     eroticDream: boolean
     hiddenDream: boolean
-    personalAnalysis: string
+    personalAnalysis?: string
     dreamOriginId: number
     isComplete: boolean
 }
@@ -81,7 +81,7 @@ export const dreamInputModel: DreamInput = {
     dreamRealityLevelId: 1,
     eroticDream: false,
     hiddenDream: false,
-    personalAnalysis: "",
+    personalAnalysis: undefined,
     dreamOriginId: 1,
     isComplete: false,
 }
