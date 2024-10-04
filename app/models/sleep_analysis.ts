@@ -12,16 +12,20 @@ export default class SleepAnalysis extends BaseModel {
   declare isMonthAnalysis: boolean
 
   /** Mês */
-  @column.date()
-  declare month: DateTime
+  @column()
+  declare month: number
+
+  /** Ano */
+  @column()
+  declare year: number
 
   /** Início da semana */
   @column.date()
-  declare weekStart: DateTime
+  declare weekStart: DateTime | null
 
   /** Fim da semana */
   @column.date()
-  declare weekEnd: DateTime
+  declare weekEnd: DateTime | null
 
   /** Contagem de sonhos */
   @column()

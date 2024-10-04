@@ -12,16 +12,20 @@ export default class DreamAnalysis extends BaseModel {
   declare isMonthAnalysis: boolean
 
   /** Mês */
-  @column.date()
-  declare month: DateTime
+  @column()
+  declare month: number
+
+  /** Mês */
+  @column()
+  declare year: number
 
   /** Início da semana */
   @column.date()
-  declare weekStart: DateTime
+  declare weekStart: DateTime | null
 
   /** Fim da semana */
   @column.date()
-  declare weekEnd: DateTime
+  declare weekEnd: DateTime | null
 
   /** Ponto de vista de sonho de maior ocorrência */
   @column()

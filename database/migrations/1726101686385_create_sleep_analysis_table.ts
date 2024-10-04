@@ -7,7 +7,8 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
       table.boolean('is_month_anaylsis').notNullable().defaultTo(false)
-      table.date('month').notNullable()
+      table.integer('month').notNullable()
+      table.integer('year').notNullable()
       table.date('week_start')
       table.date('week_end')
       table.integer('dreams_count').notNullable()
