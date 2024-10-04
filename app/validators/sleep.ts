@@ -126,3 +126,11 @@ export const updateSleepValidator = vine.compile(
         }),
     })
 )
+
+export const createSimpleSleepValidator = vine.compile(
+    vine.object({
+        sleepStartYesterday: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] }).optional(),
+        sleepEndToday: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] }).optional(),
+        date: vine.date({ formats: ['YYYY-MM-DD', 'YYYY/MM/DD'] }),
+    })
+)

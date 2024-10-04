@@ -6,9 +6,9 @@ import { SleepHumorType } from "./sleepHumor.js"
 export type SleepInput = {
     userId: number
     date: DateTime
-    sleepTime: number
-    sleepStart: DateTime
-    sleepEnd: DateTime
+    sleepTime?: number
+    sleepStart?: DateTime
+    sleepEnd?: DateTime
     wakeUpHumor: SleepHumorType
     layDownHumor: SleepHumorType
     biologicalOccurences: BiologicalOccurencesType
@@ -25,12 +25,24 @@ export type SleepCreationInput = {
     dreams: CreateSleepWithDreamInput[]
 } & SleepInput
 
+export type CreateSimpleSleepProps = {
+    userId: number
+    date: DateTime
+    sleepStart?: DateTime
+    sleepEnd?: DateTime
+}
+
+export type GetSimpleSleepProps = {
+    sleepStart: DateTime | null
+    sleepEnd: DateTime | null
+}
+
 export const sleepInputModel : SleepInput = {
     userId: 0,
     date: DateTime.now(),
-    sleepTime: 0,
-    sleepStart: DateTime.now(),
-    sleepEnd: DateTime.now(),
+    sleepTime: undefined,
+    sleepStart: undefined,
+    sleepEnd: undefined,
     wakeUpHumor: {
         undefinedHumor: false,
         calm: false,

@@ -1,6 +1,7 @@
+import { CreateSimpleSleepProps, GetSimpleSleepProps, SleepCreationInput, SleepInput, sleepInputModel, SleepOutput } from "../types/sleepTypes.js"
+import { DateTime } from "luxon"
 import { DreamTagInput } from "../types/DreamTagTypes.js"
 import { Pagination } from "../types/pagiation.js"
-import { SleepCreationInput, SleepInput, SleepOutput } from "../types/sleepTypes.js"
 import { TagInput } from "../types/TagTypes.js"
 import { TransactionClientContract } from "@adonisjs/lucid/types/database"
 import CustomException from "#exceptions/custom_exception"
@@ -127,6 +128,73 @@ export default class SleepService implements SleepServiceProps {
             .where('user_id', userId)
             .orderBy(orderBy, orderByDirection as any)
             .paginate(page, limit)
+    }
+
+    async CreateSimpleSleep(simpleSleep: CreateSimpleSleepProps): Promise<void> {
+        const {
+            sleepStart,
+            sleepEnd,
+            date,
+            userId
+        } = simpleSleep
+
+        if (!await this.AskSimpleSleep(userId, date.toJSDate()))
+            throw new CustomException(500, "Este sono simples não pode ser criado ou editado pois um sono real já foi cadastrado na mesma data.")
+
+        let sleepTime: number | undefined = undefined
+        const dateYesterday = date.minus(86400000)
+        const sleep = await Sleep.findBy("date", dateYesterday.toJSDate())
+
+        if (sleepStart && sleepEnd) {
+            if (sleepStart > sleepEnd)
+                throw new CustomException(400, "O horário de acordar não pode ser anterior ao horário de dormir.")
+            sleepTime = sleepEnd.diff(sleepStart, "hours").hours
+        }
+        else if (sleepStart && sleep) {
+            if (sleep.sleepEnd) sleepTime = sleep.sleepEnd.diff(sleepStart, "hours").hours
+        }
+        else if (sleepEnd && sleep) {
+            if (sleep.sleepStart) sleepTime = sleepEnd.diff(sleep.sleepStart, "hours").hours
+        }
+
+        const sleepModel: SleepInput = {
+            ...sleepInputModel,
+            sleepStart: sleepStart,
+            sleepEnd: sleepEnd,
+            sleepTime: sleepTime,
+            userId: userId,
+            date: dateYesterday,
+        }
+
+        if (sleep) { await Sleep.updateOrCreate({ id: sleep.id }, sleepModel) }
+        else { await Sleep.create(sleepModel) }
+    }
+
+    async AskSimpleSleep(userId: number, date?: Date): Promise<boolean> {
+        const dateYesterday = DateTime.fromJSDate(date ?? new Date()).minus(86400000)
+        const sleep = await Sleep.query()
+            .where("date", dateYesterday.toJSDate())
+            .andWhere("user_id", userId)
+            .first()
+
+        if (!sleep) return true
+        if (sleep.sleepStart && sleep.sleepEnd) return false
+        else return true
+    }
+
+    async GetSimpleSleep(userId: number, date?: Date): Promise<GetSimpleSleepProps> {
+        const dateYesterday = DateTime.fromJSDate(date ?? new Date()).minus(86400000)
+        const sleep = await Sleep.query()
+            .where("date", dateYesterday.toJSDate())
+            .andWhere("user_id", userId)
+            .first()
+
+        if (!sleep) throw new CustomException(404, "Sono simples não encontrado.")
+
+        return {
+            sleepEnd: sleep.sleepEnd,
+            sleepStart: sleep.sleepStart,
+        }
     }
 
     /**

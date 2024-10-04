@@ -1,6 +1,7 @@
-import { createSleepValidator, updateSleepValidator } from '#validators/sleep'
+import { createSimpleSleepValidator, createSleepValidator, updateSleepValidator } from '#validators/sleep'
 import { CreateSleepWithDreamInput } from '../types/dreamTypes.js'
 import { DateTime } from 'luxon'
+import { GetSimpleSleepProps } from '../types/sleepTypes.js'
 import { inject } from '@adonisjs/core'
 import { ModelPaginatorContract } from '@adonisjs/lucid/types/model'
 import { paginationValidator } from '#validators/system'
@@ -103,5 +104,26 @@ export default class SleepController {
             { page, limit, orderBy, orderByDirection: orderByDirection as any },
             auth.user!.id
         )
+    }
+
+    async createSimpleSleep({ request, response, auth }: HttpContext): Promise<void> {
+        const { sleepStartYesterday, sleepEndToday, date } = await request.validateUsing(createSimpleSleepValidator)
+        if (!sleepStartYesterday && !sleepEndToday)
+            throw new CustomException(400, "Nenhuma informação para criação de sono simples informada.")
+        await this.sleepService.CreateSimpleSleep({
+            sleepStart: sleepStartYesterday ? DateTime.fromJSDate(sleepStartYesterday) : undefined,
+            sleepEnd: sleepEndToday ? DateTime.fromJSDate(sleepEndToday) : undefined,
+            date: DateTime.fromJSDate(date),
+            userId: auth.user!.id
+        })
+        response.status(201)
+    }
+
+    async askSimpleSleep({ auth }: HttpContext): Promise<boolean> {
+        return await this.sleepService.AskSimpleSleep(auth.user!.id)
+    }
+
+    async getSimpleSleep({ auth }: HttpContext): Promise<GetSimpleSleepProps> {
+        return await this.sleepService.GetSimpleSleep(auth.user!.id)
     }
 }
