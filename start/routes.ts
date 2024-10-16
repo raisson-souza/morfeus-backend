@@ -12,6 +12,7 @@ import router from '@adonisjs/core/services/router'
 
 const dreamController = () => import("#controllers/dream_controller")
 const sleepController = () => import("#controllers/sleep_controller")
+const tagController = () => import("#controllers/tag_controller")
 const userController = () => import("#controllers/user_controller")
 
 router
@@ -70,6 +71,17 @@ router
         router.delete('/:id', [dreamController, 'delete'])
       })
       .prefix('/dreams')
+      .use(middleware.auth({
+        guards: ['api']
+      }))
+
+    router
+      .group(() => {
+        router.get('/list', [tagController, 'list']),
+        router.get('/list_by_dream', [tagController, 'listByDream'])
+        router.get('/list_dreams_by_tag', [tagController, 'listDreamsByTag'])
+      })
+      .prefix('/tags')
       .use(middleware.auth({
         guards: ['api']
       }))
