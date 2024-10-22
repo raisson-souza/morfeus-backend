@@ -77,6 +77,7 @@ export type ListDreamsByUser = {
         dreamLucidityLevelId?: number
         dreamTypeId?: number
         dreamRealityLevelId?: number
+        dreamPointOfViewId?: number
     }
     /** Data para extração do mês para a filtragem */
     date: DateTime

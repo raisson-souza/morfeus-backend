@@ -124,6 +124,7 @@ export const listDreamsByUserValidator = vine.compile(
             dreamLucidityLevelId: vine.number().optional(),
             dreamTypeId: vine.number().optional(),
             dreamRealityLevelId: vine.number().optional(),
+            dreamPointOfViewId: vine.number().optional(),
         }),
     })
 )

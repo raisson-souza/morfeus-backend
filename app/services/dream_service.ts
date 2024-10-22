@@ -203,6 +203,7 @@ export default class DreamService implements DreamServiceProps {
                 dreamLucidityLevelId,
                 dreamTypeId,
                 dreamRealityLevelId,
+                dreamPointOfViewId,
             },
             date,
         } = listingProps
@@ -216,7 +217,6 @@ export default class DreamService implements DreamServiceProps {
         /**
          * - [ ] testar filtros em conjunto
          * - [ ] corrigir filtragem por dreamClimates .whereJson()
-         * - [ ] incluir filtragem por ponto de vista
          * - [ ] verificar .if(filterId, query => { query.where() })
          * - [ ] Separar construção da query sem aplicar a consulta
          */
@@ -307,6 +307,8 @@ export default class DreamService implements DreamServiceProps {
                     query.orWhere('dreams.dream_type_id', dreamTypeId)
                 if (dreamRealityLevelId)
                     query.orWhere('dreams.dream_reality_level_id', dreamRealityLevelId)
+                if (dreamPointOfViewId)
+                    query.orWhere('dreams.dream_point_of_view_id', dreamPointOfViewId)
             })
             .select('dreams.id', 'dreams.title', 'sleeps.date')
             .select(db.raw('SUBSTRING(dreams.description, 1, 50) as shortDescription'))
