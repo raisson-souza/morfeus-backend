@@ -215,7 +215,6 @@ export default class DreamService implements DreamServiceProps {
 
         /**
          * - [ ] testar filtros em conjunto
-         * - [ ] corrigir filtragem com personalAnalysis
          * - [ ] corrigir filtragem por dreamClimates .whereJson()
          * - [ ] incluir filtragem por ponto de vista
          * - [ ] verificar .if(filterId, query => { query.where() })
