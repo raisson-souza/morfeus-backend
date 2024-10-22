@@ -216,7 +216,6 @@ export default class DreamService implements DreamServiceProps {
 
         /**
          * - [ ] testar filtros em conjunto
-         * - [ ] corrigir filtragem por dreamClimates .whereJson()
          * - [ ] verificar .if(filterId, query => { query.where() })
          * - [ ] Separar construção da query sem aplicar a consulta
          */
@@ -274,29 +273,21 @@ export default class DreamService implements DreamServiceProps {
             .andWhere(query => {
                 if (noEspecificy) return
                 if (dreamsWithPersonalAnalysis)
-                    query.orWhereNotNull('dreams.personal_analysis') // TODO: problema pois a criação de sonho seta como "" todos os sonhos, deveria ser NULL
-                // if (dreamClimates) { // TODO dream climate é um JSON, será necessário fazer outra validação
-                //     if (dreamClimates.ameno)
-                //         query.orWhere('dreams.dream_hour_id', true)
-                //     if (dreamClimates.calor)
-                //         query.orWhere('dreams.dream_hour_id', true)
-                //     if (dreamClimates.garoa)
-                //         query.orWhere('dreams.dream_hour_id', true)
-                //     if (dreamClimates.chuva)
-                //         query.orWhere('dreams.dream_hour_id', true)
-                //     if (dreamClimates.tempestade)
-                //         query.orWhere('dreams.dream_hour_id', true)
-                //     if (dreamClimates.nevoa)
-                //         query.orWhere('dreams.dream_hour_id', true)
-                //     if (dreamClimates.neve)
-                //         query.orWhere('dreams.dream_hour_id', true)
-                //     if (dreamClimates.multiplos)
-                //         query.orWhere('dreams.dream_hour_id', true)
-                //     if (dreamClimates.outro)
-                //         query.orWhere('dreams.dream_hour_id', true)
-                //     if (dreamClimates.indefinido)
-                //         query.orWhere('dreams.dream_hour_id', true)
-                // }
+                    query.orWhereNotNull('dreams.personal_analysis')
+                if (dreamClimates) {
+                    query.orWhereJsonSuperset('dreams.climate', {
+                        'ameno': dreamClimates.ameno ?? false,
+                        'indefinido': dreamClimates.indefinido ?? false,
+                        'outro': dreamClimates.outro ?? false,
+                        'multiplos': dreamClimates.multiplos ?? false,
+                        'neve': dreamClimates.neve ?? false,
+                        'nevoa': dreamClimates.nevoa ?? false,
+                        'tempestade': dreamClimates.tempestade ?? false,
+                        'chuva': dreamClimates.chuva ?? false,
+                        'garoa': dreamClimates.garoa ?? false,
+                        'calor': dreamClimates.calor ?? false,
+                    })
+                }
                 if (dreamHourId)
                     query.orWhere('dreams.dream_hour_id', dreamHourId)
                 if (dreamDurationId)
