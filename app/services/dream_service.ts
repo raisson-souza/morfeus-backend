@@ -214,12 +214,6 @@ export default class DreamService implements DreamServiceProps {
         if (date > DateTime.now())
             throw new CustomException(400, "A data de listagem não pode ser maior que a atual.")
 
-        /**
-         * - [ ] testar filtros em conjunto
-         * - [ ] verificar .if(filterId, query => { query.where() })
-         * - [ ] Separar construção da query sem aplicar a consulta
-         */
-
         const dreamsFound = await db.query()
             .from('dreams')
             .innerJoin('sleeps', 'sleeps.id', 'dreams.sleep_id')
@@ -231,7 +225,7 @@ export default class DreamService implements DreamServiceProps {
                 query.andWhereRaw("EXTRACT(MONTH FROM sleeps.date) = ?", [ (date as any).getMonth() + 1])
             })
             // 2° FILTRO - listagem de sonhos | OBJETIVO
-            .andWhere(query => { // criar func separada acima para economizar espaço
+            .andWhere(query => {
                 switch (dreamCaracteristicsFilter) {
                     case "all": break
                     case "allNotHidden":
@@ -248,7 +242,7 @@ export default class DreamService implements DreamServiceProps {
                         query.where('dreams.hidden_dream', true)
                         break
                     case "allErotic":
-                        query.where('dreams.hidden_dream', true)
+                        query.where('dreams.erotic_dream', true)
                         break
                     default:
                 }
@@ -270,36 +264,52 @@ export default class DreamService implements DreamServiceProps {
                 }
             })
             // 4° FILTRO - características do sonho | ACUMULATIVO
-            .andWhere(query => {
-                if (noEspecificy) return
-                if (dreamsWithPersonalAnalysis)
-                    query.orWhereNotNull('dreams.personal_analysis')
-                if (dreamClimates) {
-                    query.orWhereJsonSuperset('dreams.climate', {
-                        'ameno': dreamClimates.ameno ?? false,
-                        'indefinido': dreamClimates.indefinido ?? false,
-                        'outro': dreamClimates.outro ?? false,
-                        'multiplos': dreamClimates.multiplos ?? false,
-                        'neve': dreamClimates.neve ?? false,
-                        'nevoa': dreamClimates.nevoa ?? false,
-                        'tempestade': dreamClimates.tempestade ?? false,
-                        'chuva': dreamClimates.chuva ?? false,
-                        'garoa': dreamClimates.garoa ?? false,
-                        'calor': dreamClimates.calor ?? false,
-                    })
-                }
-                if (dreamHourId)
-                    query.orWhere('dreams.dream_hour_id', dreamHourId)
-                if (dreamDurationId)
-                    query.orWhere('dreams.dream_duration_id', dreamDurationId)
-                if (dreamLucidityLevelId)
-                    query.orWhere('dreams.dream_lucidity_level_id', dreamLucidityLevelId)
-                if (dreamTypeId)
-                    query.orWhere('dreams.dream_type_id', dreamTypeId)
-                if (dreamRealityLevelId)
-                    query.orWhere('dreams.dream_reality_level_id', dreamRealityLevelId)
-                if (dreamPointOfViewId)
-                    query.orWhere('dreams.dream_point_of_view_id', dreamPointOfViewId)
+            .if(!noEspecificy, query => {
+                query.andWhere(query2 => {
+                    if (dreamsWithPersonalAnalysis)
+                        query2.orWhereNotNull('dreams.personal_analysis')
+                    // Se existirem climas a serem filtrados e se pelo menos um for verdadeiro
+                    if (
+                        dreamClimates &&
+                        (
+                            dreamClimates.ameno ||
+                            dreamClimates.indefinido ||
+                            dreamClimates.outro ||
+                            dreamClimates.multiplos ||
+                            dreamClimates.neve ||
+                            dreamClimates.nevoa ||
+                            dreamClimates.tempestade ||
+                            dreamClimates.chuva ||
+                            dreamClimates.garoa ||
+                            dreamClimates.calor
+                        )
+                    ) {
+                        query2.orWhereJsonSuperset('dreams.climate', {
+                            'ameno': dreamClimates.ameno ?? false,
+                            'indefinido': dreamClimates.indefinido ?? false,
+                            'outro': dreamClimates.outro ?? false,
+                            'multiplos': dreamClimates.multiplos ?? false,
+                            'neve': dreamClimates.neve ?? false,
+                            'nevoa': dreamClimates.nevoa ?? false,
+                            'tempestade': dreamClimates.tempestade ?? false,
+                            'chuva': dreamClimates.chuva ?? false,
+                            'garoa': dreamClimates.garoa ?? false,
+                            'calor': dreamClimates.calor ?? false,
+                        })
+                    }
+                    if (dreamHourId)
+                        query2.orWhere('dreams.dream_hour_id', dreamHourId)
+                    if (dreamDurationId)
+                        query2.orWhere('dreams.dream_duration_id', dreamDurationId)
+                    if (dreamLucidityLevelId)
+                        query2.orWhere('dreams.dream_lucidity_level_id', dreamLucidityLevelId)
+                    if (dreamTypeId)
+                        query2.orWhere('dreams.dream_type_id', dreamTypeId)
+                    if (dreamRealityLevelId)
+                        query2.orWhere('dreams.dream_reality_level_id', dreamRealityLevelId)
+                    if (dreamPointOfViewId)
+                        query2.orWhere('dreams.dream_point_of_view_id', dreamPointOfViewId)
+                })
             })
             .select('dreams.id', 'dreams.title', 'sleeps.date')
             .select(db.raw('SUBSTRING(dreams.description, 1, 50) as shortDescription'))
