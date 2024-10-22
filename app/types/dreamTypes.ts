@@ -90,8 +90,8 @@ export type DreamListedByUser = {
     /** Descrição curta do sonho */
     shortDescription: string
     date: DateTime
-    Tags: TagOutput[]
-} & LucidRow
+    tags: TagOutput[]
+}
 
 export const dreamInputModel: DreamInput = {
     sleepId: 0,

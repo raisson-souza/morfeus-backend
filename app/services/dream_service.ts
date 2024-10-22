@@ -15,11 +15,15 @@ import DreamTag from "#models/dream_tag"
 import Sleep from "#models/sleep"
 import SleepService from "./sleep_service.js"
 import Tag from "#models/tag"
+import TagService from "./tag_service.js"
 import User from "#models/user"
 
 @inject()
 export default class DreamService implements DreamServiceProps {
-    constructor(protected sleepService: SleepService) { }
+    constructor(
+        protected sleepService: SleepService,
+        protected tagService: TagService,
+    ) { }
 
     async Create(dream: DreamCompleteInput, validate = true) : Promise<Dream> {
         let newDream: Dream | null = null
@@ -214,7 +218,7 @@ export default class DreamService implements DreamServiceProps {
         if (date > DateTime.now())
             throw new CustomException(400, "A data de listagem não pode ser maior que a atual.")
 
-        const dreamsFound = await db.query()
+        const dreamsFound: DreamListedByUser[] = await db.query()
             .from('dreams')
             .innerJoin('sleeps', 'sleeps.id', 'dreams.sleep_id')
             .innerJoin('users', 'users.id', 'sleeps.user_id')
@@ -314,6 +318,25 @@ export default class DreamService implements DreamServiceProps {
             .select('dreams.id', 'dreams.title', 'sleeps.date')
             .select(db.raw('SUBSTRING(dreams.description, 1, 50) as shortDescription'))
             .orderBy('dreams.created_at', 'asc')
+            .then(result => {
+                return result.map(dream => {
+                    return {
+                        id: dream["id"],
+                        title: dream["title"],
+                        shortDescription: dream["shortDescription"],
+                        date: dream["date"],
+                        tags: [],
+                    } as DreamListedByUser
+                }) as DreamListedByUser[]
+            })
+
+        if (dreamsFound.length > 0) {
+            for (const dream of dreamsFound) {
+                try {
+                    dream.tags = await this.tagService.ListByDream(dream.id)
+                } catch { }
+            }
+        }
 
         return dreamsFound
     }
