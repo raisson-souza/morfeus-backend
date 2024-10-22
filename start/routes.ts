@@ -38,7 +38,7 @@ router
 
         // Sonhos do usuário
         router
-          .group(() => { router.get('/list', [dreamController, 'listByUser']) })
+          .group(() => { router.post('/list', [dreamController, 'listByUser']) })
           .prefix('/dreams')
           .use(middleware.auth({ guards: ['api'] }))
       })

@@ -1,6 +1,6 @@
-import { createCompleteDreamValidator, createUncompleteDreamValidator, listDreamBySleepValidator, updateCompleteDreamValidator } from '#validators/dream'
+import { createCompleteDreamValidator, createUncompleteDreamValidator, listDreamBySleepValidator, listDreamsByUserValidator, updateCompleteDreamValidator } from '#validators/dream'
 import { DateTime } from 'luxon'
-import { DreamWithTags } from '../types/dreamTypes.js'
+import { DreamListedByUser, DreamWithTags, ListDreamsByUser } from '../types/dreamTypes.js'
 import { inject } from "@adonisjs/core"
 import { ModelPaginatorContract } from '@adonisjs/lucid/types/model'
 import { paginationValidator } from '#validators/system'
@@ -126,12 +126,13 @@ export default class DreamController {
         response.status(201).json("Sonho deletado com sucesso.")
     }
 
-    async listByUser({ request, auth }: HttpContext): Promise<ModelPaginatorContract<Dream>> {
-        const { page, limit = 10, orderBy = "id", orderByDirection = "desc" } = await request.validateUsing(paginationValidator)
-        return this.dreamService.ListByUser(
-            { page, limit, orderBy, orderByDirection: orderByDirection as any },
-            auth.user!.id
-        )
+    async listByUser({ request, auth }: HttpContext): Promise<DreamListedByUser[]> {
+        const listDreamsByUserPropsFromValidator = await request.validateUsing(listDreamsByUserValidator)
+        const listDreamsByUserProps: ListDreamsByUser = {
+            ...(listDreamsByUserPropsFromValidator as any),
+            userId: auth.user!.id
+        }
+        return this.dreamService.ListByUser(listDreamsByUserProps)
     }
 
     async listBySleep({ request, response }: HttpContext): Promise<DreamWithTags[]> {

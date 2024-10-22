@@ -93,3 +93,37 @@ export const listDreamBySleepValidator = vine.compile(
         date: vine.date({ formats: ['YYYY/MM/DD', 'YYYY-MM-DD'] }).optional(),
     })
 )
+
+export const listDreamsByUserValidator = vine.compile(
+    vine.object({
+        /** Data para extração do mês para a filtragem */
+        date: vine.date({ formats: ['YYYY/MM/DD', 'YYYY-MM-DD'] }),
+        /** Filtro único por característica de sonho */
+        dreamCaracteristicsFilter: vine.string().in(["all", "allNotHidden", "allNotErotic", "allNotHiddenAndErotic", "allHidden", "allErotic"]),
+        /** Filtro único por origem do sonho */
+        dreamOriginFilter: vine.string().in(["all", "completeDreams", "fastDreams", "importedDreams"]),
+        /** Filtro acumulativo por característica específica de sonho */
+        dreamEspecificCaracteristicsFilter: vine.object({
+            /** Sem especificação de característica (ignora outras filtragens acumulativas) */
+            noEspecificy: vine.boolean().optional(),
+            dreamsWithPersonalAnalysis: vine.boolean().optional(),
+            dreamClimates: vine.object({
+                ameno: vine.boolean().optional(),
+                calor: vine.boolean().optional(),
+                garoa: vine.boolean().optional(),
+                chuva: vine.boolean().optional(),
+                tempestade: vine.boolean().optional(),
+                nevoa: vine.boolean().optional(),
+                neve: vine.boolean().optional(),
+                multiplos: vine.boolean().optional(),
+                outro: vine.boolean().optional(),
+                indefinido: vine.boolean().optional(),
+            }).optional(),
+            dreamHourId: vine.number().optional(),
+            dreamDurationId: vine.number().optional(),
+            dreamLucidityLevelId: vine.number().optional(),
+            dreamTypeId: vine.number().optional(),
+            dreamRealityLevelId: vine.number().optional(),
+        }),
+    })
+)

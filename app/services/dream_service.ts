@@ -1,5 +1,5 @@
 import { DateTime } from "luxon"
-import { DreamCompleteInput, DreamCompleteUpdateInput, DreamInput, DreamUncompleteInput, DreamWithTags } from "../types/dreamTypes.js"
+import { DreamCompleteInput, DreamCompleteUpdateInput, DreamInput, DreamListedByUser, DreamUncompleteInput, DreamWithTags, ListDreamsByUser } from "../types/dreamTypes.js"
 import { DreamTagInput } from "../types/DreamTagTypes.js"
 import { inject } from "@adonisjs/core"
 import { ModelPaginatorContract } from "@adonisjs/lucid/types/model"
@@ -189,19 +189,131 @@ export default class DreamService implements DreamServiceProps {
             .paginate(page, limit)
     }
 
-    async ListByUser(pagination: Pagination, userId: number): Promise<ModelPaginatorContract<Dream>> {
-        const { page, limit, orderBy, orderByDirection } = pagination
+    async ListByUser(listingProps: ListDreamsByUser): Promise<DreamListedByUser[]> {
+        const {
+            userId,
+            dreamCaracteristicsFilter,
+            dreamOriginFilter,
+            dreamEspecificCaracteristicsFilter: {
+                noEspecificy,
+                dreamsWithPersonalAnalysis,
+                dreamClimates,
+                dreamHourId,
+                dreamDurationId,
+                dreamLucidityLevelId,
+                dreamTypeId,
+                dreamRealityLevelId,
+            },
+            date,
+        } = listingProps
 
         const userExists = await User.find(userId)
         if (!userExists) throw new CustomException(404, "Usuário inexistente para a listagem de sonhos.")
 
-        return await Dream.query()
+        if (date > DateTime.now())
+            throw new CustomException(400, "A data de listagem não pode ser maior que a atual.")
+
+        /**
+         * - [ ] testar filtros em conjunto
+         * - [ ] corrigir filtragem com personalAnalysis
+         * - [ ] corrigir filtragem por dreamClimates .whereJson()
+         * - [ ] incluir filtragem por ponto de vista
+         * - [ ] verificar .if(filterId, query => { query.where() })
+         * - [ ] Separar construção da query sem aplicar a consulta
+         */
+
+        const dreamsFound = await db.query()
+            .from('dreams')
             .innerJoin('sleeps', 'sleeps.id', 'dreams.sleep_id')
             .innerJoin('users', 'users.id', 'sleeps.user_id')
-            .where('users.id', userId)
-            .select('dreams.id', 'dreams.*')
-            .orderBy(`dreams.${ orderBy }`, orderByDirection)
-            .paginate(page, limit)
+            // 1° FILTRO - base | OBJETIVO
+            .where(query => {
+                query.where('users.id', userId)
+                query.whereRaw("EXTRACT(YEAR FROM sleeps.date) = ?", [ (date as any).getFullYear() ])
+                query.andWhereRaw("EXTRACT(MONTH FROM sleeps.date) = ?", [ (date as any).getMonth() + 1])
+            })
+            // 2° FILTRO - listagem de sonhos | OBJETIVO
+            .andWhere(query => { // criar func separada acima para economizar espaço
+                switch (dreamCaracteristicsFilter) {
+                    case "all": break
+                    case "allNotHidden":
+                        query.where('dreams.hidden_dream', false)
+                        break
+                    case "allNotErotic":
+                        query.where('dreams.erotic_dream', false)
+                        break
+                    case "allNotHiddenAndErotic":
+                        query.where('dreams.hidden_dream', false)
+                        query.where('dreams.erotic_dream', false)
+                        break
+                    case "allHidden":
+                        query.where('dreams.hidden_dream', true)
+                        break
+                    case "allErotic":
+                        query.where('dreams.hidden_dream', true)
+                        break
+                    default:
+                }
+            })
+            // 3° FILTRO - origem do sonho | OBJETIVO
+            .andWhere(query => {
+                switch (dreamOriginFilter) {
+                    case "all": break
+                    case "completeDreams":
+                        query.where('dreams.dream_origin_id', 1)
+                        break
+                    case "fastDreams":
+                        query.where('dreams.dream_origin_id', 2)
+                        break
+                    case "importedDreams":
+                        query.where('dreams.dream_origin_id', 3)
+                        break
+                    default:
+                }
+            })
+            // 4° FILTRO - características do sonho | ACUMULATIVO
+            .andWhere(query => {
+                if (noEspecificy) return
+                if (dreamsWithPersonalAnalysis)
+                    query.orWhereNotNull('dreams.personal_analysis') // TODO: problema pois a criação de sonho seta como "" todos os sonhos, deveria ser NULL
+                // if (dreamClimates) { // TODO dream climate é um JSON, será necessário fazer outra validação
+                //     if (dreamClimates.ameno)
+                //         query.orWhere('dreams.dream_hour_id', true)
+                //     if (dreamClimates.calor)
+                //         query.orWhere('dreams.dream_hour_id', true)
+                //     if (dreamClimates.garoa)
+                //         query.orWhere('dreams.dream_hour_id', true)
+                //     if (dreamClimates.chuva)
+                //         query.orWhere('dreams.dream_hour_id', true)
+                //     if (dreamClimates.tempestade)
+                //         query.orWhere('dreams.dream_hour_id', true)
+                //     if (dreamClimates.nevoa)
+                //         query.orWhere('dreams.dream_hour_id', true)
+                //     if (dreamClimates.neve)
+                //         query.orWhere('dreams.dream_hour_id', true)
+                //     if (dreamClimates.multiplos)
+                //         query.orWhere('dreams.dream_hour_id', true)
+                //     if (dreamClimates.outro)
+                //         query.orWhere('dreams.dream_hour_id', true)
+                //     if (dreamClimates.indefinido)
+                //         query.orWhere('dreams.dream_hour_id', true)
+                // }
+                if (dreamHourId)
+                    query.orWhere('dreams.dream_hour_id', dreamHourId)
+                if (dreamDurationId)
+                    query.orWhere('dreams.dream_duration_id', dreamDurationId)
+                if (dreamLucidityLevelId)
+                    query.orWhere('dreams.dream_lucidity_level_id', dreamLucidityLevelId)
+                if (dreamTypeId)
+                    query.orWhere('dreams.dream_type_id', dreamTypeId)
+                if (dreamRealityLevelId)
+                    query.orWhere('dreams.dream_reality_level_id', dreamRealityLevelId)
+            })
+            .select('dreams.id', 'dreams.title', 'sleeps.date')
+            .select(db.raw('SUBSTRING(dreams.description, 1, 50) as shortDescription'))
+            .orderBy('dreams.created_at', 'asc')
+
+        return dreamsFound
     }
 
     async CreateTags(tags: string[], dreamId: number, trx: TransactionClientContract): Promise<void> {

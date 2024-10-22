@@ -1,5 +1,7 @@
 import { DateTime } from "luxon"
 import { DreamClimateType } from "./dreamClimate.js"
+import { LucidRow } from "@adonisjs/lucid/types/model"
+import { TagOutput } from "./TagTypes.js"
 
 export type DreamInput = {
     sleepId: number
@@ -56,6 +58,39 @@ export type DreamWithTags = {
         tagTitle: string
     }[]
 } & DreamInput
+
+export type ListDreamsByUser = {
+    /** ID do usuário */
+    userId: number
+    /** Filtro único por característica de sonho */
+    dreamCaracteristicsFilter: "all" | "allNotHidden" | "allNotErotic" | "allNotHiddenAndErotic" | "allHidden" | "allErotic"
+    /** Filtro único por origem do sonho */
+    dreamOriginFilter: "all" | "completeDreams" | "fastDreams" | "importedDreams"
+    /** Filtro acumulativo por característica específica de sonho */
+    dreamEspecificCaracteristicsFilter: {
+        /** Sem especificação de característica (ignora outras filtragens acumulativas) */
+        noEspecificy?: boolean
+        dreamsWithPersonalAnalysis?: boolean
+        dreamClimates?: DreamClimateType
+        dreamHourId?: number
+        dreamDurationId?: number
+        dreamLucidityLevelId?: number
+        dreamTypeId?: number
+        dreamRealityLevelId?: number
+    }
+    /** Data para extração do mês para a filtragem */
+    date: DateTime
+} 
+
+/** Retorno dos sonhos listados por usuário */
+export type DreamListedByUser = {
+    id: number
+    title: string
+    /** Descrição curta do sonho */
+    shortDescription: string
+    date: DateTime
+    Tags: TagOutput[]
+} & LucidRow
 
 export const dreamInputModel: DreamInput = {
     sleepId: 0,
