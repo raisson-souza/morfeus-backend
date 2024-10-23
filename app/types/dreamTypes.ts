@@ -1,6 +1,5 @@
 import { DateTime } from "luxon"
 import { DreamClimateType } from "./dreamClimate.js"
-import { LucidRow } from "@adonisjs/lucid/types/model"
 import { TagOutput } from "./TagTypes.js"
 
 export type DreamInput = {

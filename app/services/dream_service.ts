@@ -428,7 +428,7 @@ export default class DreamService implements DreamServiceProps {
                 dreamRealityLevelId: dream.dreamRealityLevelId,
                 eroticDream: dream.eroticDream,
                 hiddenDream: dream.hiddenDream,
-                personalAnalysis: dream.personalAnalysis,
+                personalAnalysis: dream.personalAnalysis ?? undefined,
                 dreamOriginId: dream.dreamOriginId,
                 isComplete: dream.isComplete,
                 tags: tags
