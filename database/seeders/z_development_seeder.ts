@@ -1,9 +1,5 @@
 import { BaseSeeder } from '@adonisjs/lucid/seeders'
 import { DateTime } from 'luxon'
-import { DreamInput } from '../../app/types/dreamTypes.js'
-import { DreamTagInput } from '../../app/types/DreamTagTypes.js'
-import { SleepInput } from '../../app/types/sleepTypes.js'
-import { TagInput } from '../../app/types/TagTypes.js'
 import Dream from '#models/dream'
 import DreamTag from '#models/dream_tag'
 import env from '#start/env'
@@ -25,6 +21,7 @@ export default class extends BaseSeeder {
      * esse trecho de código pode ser comentado.
      */
     if (env.get('NODE_ENV') === 'development' || env.get('NODE_ENV') === 'staging') {
+      // Inicializada data para o 1° dia do mês atual
       const dateNow = DateTime.now().minus({ seconds: ((DateTime.now().day - 1) * 86400) })
 
       await User.create({
@@ -34,12 +31,14 @@ export default class extends BaseSeeder {
       })
 
       for (let i = 0; i < 5; i++) {
+        // Avanço de um dia por sono
         const newDate = dateNow.plus({ seconds: (86400 * i) })
-        const sleepModel: SleepInput = {
+        await Sleep.create({
           userId: 1,
           date: newDate,
           sleepTime: 6,
           sleepStart: newDate,
+          // Data final do sono é 6 horas após a inicial
           sleepEnd: newDate.plus({ seconds: (3600 * 6) }),
           wakeUpHumor: {
             undefinedHumor: (i % 2 === 0) && (i === 0),
@@ -80,12 +79,11 @@ export default class extends BaseSeeder {
             evacuacaoInvoluntaria: !(i % 2 === 0),
             polucao: !(i % 2 === 0),
           },
-        }
-        await Sleep.create(sleepModel)
+        })
       }
 
       for (let i = 0; i < 5; i++) {
-        const dreamModel: DreamInput = {
+        await Dream.create({
           sleepId: i + 1,
           title: `Sonho ${ i + 1 }`,
           description: `Descrição do sonho ${ i + 1 }`,
@@ -112,31 +110,19 @@ export default class extends BaseSeeder {
           personalAnalysis: (i % 2 === 0) ? `Esse sonho tem análise` : undefined,
           dreamOriginId: i <= 3 ? 1 : 2,
           isComplete: true,
-        }
-        await Dream.create(dreamModel)
-
-        // TODO: eliminar const e criar com createMany
-        const tagsModel: TagInput[] = []
+        })
 
         if (i === 0) {
-          tagsModel.push({ title: "ZERO" })
-          tagsModel.push({ title: "PAR" })
-          tagsModel.push({ title: "IMPAR" })
-
-          for (let tag of tagsModel) {
-            await Tag.create(tag)
-          }
+          await Tag.createMany([
+            { title: "ZERO" },
+            { title: "PAR" },
+            { title: "IMPAR" },
+          ])
+          await DreamTag.create({ dreamId: i + 1, tagId: 1 })
         }
 
-        const dreamTagsModel: DreamTagInput[] = []
-
-        if (i === 0) dreamTagsModel.push({ dreamId: i + 1, tagId: 1 })
-        if (i % 2 === 0) dreamTagsModel.push({ dreamId: i + 1, tagId: 2 })
-        if (i % 2 != 0) dreamTagsModel.push({ dreamId: i + 1, tagId: 3 })
-
-        for (let dreamTag of dreamTagsModel) {
-          await DreamTag.create(dreamTag)
-        }
+        if (i % 2 === 0) await DreamTag.create({ dreamId: i + 1, tagId: 2 })
+        if (i % 2 != 0) await DreamTag.create({ dreamId: i + 1, tagId: 3 })
       }
     }
   }
