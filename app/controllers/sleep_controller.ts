@@ -1,7 +1,7 @@
-import { createSimpleSleepValidator, createSleepValidator, updateSleepValidator } from '#validators/sleep'
+import { createSimpleSleepValidator, createSleepValidator, listSleepsByUserValidator, updateSleepValidator } from '#validators/sleep'
 import { CreateSleepWithDreamInput } from '../types/dreamTypes.js'
 import { DateTime } from 'luxon'
-import { GetSimpleSleepProps } from '../types/sleepTypes.js'
+import { GetSimpleSleepProps, ListSleepsByUserProps } from '../types/sleepTypes.js'
 import { inject } from '@adonisjs/core'
 import { ModelPaginatorContract } from '@adonisjs/lucid/types/model'
 import { paginationValidator } from '#validators/system'
@@ -98,12 +98,9 @@ export default class SleepController {
         response.status(201).json("Sono deletado com sucesso.")
     }
 
-    async listByUser({ request, auth }: HttpContext): Promise<ModelPaginatorContract<Sleep>> {
-        const { page, limit = 10, orderBy = "id", orderByDirection = "desc" } = await request.validateUsing(paginationValidator)
-        return this.sleepService.ListByUser(
-            { page, limit, orderBy, orderByDirection: orderByDirection as any },
-            auth.user!.id
-        )
+    async listByUser({ request, auth }: HttpContext): Promise<ListSleepsByUserProps[]> {
+        const { date } = await request.validateUsing(listSleepsByUserValidator)
+        return this.sleepService.ListByUser(DateTime.fromJSDate(date), auth.user!.id)
     }
 
     async createSimpleSleep({ request, response, auth }: HttpContext): Promise<void> {

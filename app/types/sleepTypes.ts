@@ -37,6 +37,16 @@ export type GetSimpleSleepProps = {
     sleepEnd: DateTime | null
 }
 
+/** Tipo para retorno na listagem de sonos por usuário */
+export type ListSleepsByUserProps = {
+    date: DateTime
+    hoursSlept?: number
+    wakeUpHumor?: SleepHumorType
+    layDownHumor?: SleepHumorType
+    biologicalOccurrences?: BiologicalOccurencesType
+    dreamsQuantity: number
+}
+
 export const sleepInputModel : SleepInput = {
     userId: 0,
     date: DateTime.now(),

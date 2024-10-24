@@ -134,3 +134,11 @@ export const createSimpleSleepValidator = vine.compile(
         date: vine.date({ formats: ['YYYY-MM-DD', 'YYYY/MM/DD'] }),
     })
 )
+
+/** Valida a listagem de sonos por usuário */
+export const listSleepsByUserValidator = vine.compile(
+    vine.object({
+        /** Data para extração do mês para a filtragem */
+        date: vine.date({ formats: ['YYYY-MM-DD'] }),
+    })
+)

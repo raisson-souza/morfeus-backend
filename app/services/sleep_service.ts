@@ -1,4 +1,4 @@
-import { CreateSimpleSleepProps, GetSimpleSleepProps, SleepCreationInput, SleepInput, sleepInputModel, SleepOutput } from "../types/sleepTypes.js"
+import { CreateSimpleSleepProps, GetSimpleSleepProps, ListSleepsByUserProps, SleepCreationInput, SleepInput, sleepInputModel, SleepOutput } from "../types/sleepTypes.js"
 import { DateTime } from "luxon"
 import { DreamTagInput } from "../types/DreamTagTypes.js"
 import { Pagination } from "../types/pagiation.js"
@@ -118,16 +118,39 @@ export default class SleepService implements SleepServiceProps {
             .paginate(page, limit)
     }
 
-    async ListByUser(pagination: Pagination, userId: number) {
-        const { page, limit, orderBy, orderByDirection } = pagination
-
+    async ListByUser(date: DateTime, userId: number): Promise<ListSleepsByUserProps[]> {
         const userExists = await User.find(userId)
-        if (!userExists) throw new CustomException(404, "Usuário inexistente para a criação do sono.")
+        if (!userExists) throw new CustomException(404, "Usuário inexistente.")
 
-        return await Sleep.query()
-            .where('user_id', userId)
-            .orderBy(orderBy, orderByDirection as any)
-            .paginate(page, limit)
+        if (DateTime.now().month < date.month)
+            throw new CustomException(400, "A data de listagem não pode ser maior que a data atual.")
+
+        const listSleepsByUserProps: ListSleepsByUserProps[] = await db.query()
+            .from('sleeps')
+            .innerJoin('users', 'users.id', 'sleeps.user_id')
+            .innerJoin('dreams', 'dreams.sleep_id', 'sleeps.id')
+            .where(query => {
+                query.where('users.id', userId)
+                query.whereRaw('EXTRACT(YEAR FROM sleeps.date) = ?', [ date.year ])
+                query.andWhereRaw('EXTRACT(MONTH FROM sleeps.date) = ?', [ date.month ])
+            })
+            .select('sleeps.id', 'sleeps.date', 'sleeps.sleep_time', 'sleeps.wake_up_humor', 'sleeps.lay_down_humor', 'sleeps.biological_occurences')
+            .count('dreams.sleep_id', 'dreams_quantity')
+            .groupBy('sleeps.id')
+            .then(result => {
+                return result.map(sleep => {
+                    return {
+                        date: sleep["date"],
+                        hoursSlept: sleep["sleep_time"],
+                        wakeUpHumor: sleep["wake_up_humor"],
+                        layDownHumor: sleep["lay_down_humor"],
+                        biologicalOccurrences: sleep["biological_occurences"],
+                        dreamsQuantity: Number.parseInt(sleep["dreams_quantity"]),
+                    } as ListSleepsByUserProps
+                })
+            })
+
+        return listSleepsByUserProps
     }
 
     async CreateSimpleSleep(simpleSleep: CreateSimpleSleepProps): Promise<void> {
