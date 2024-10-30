@@ -63,98 +63,32 @@ export default class AnalysisService implements AnalysisServiceProps {
         // TODO: armazenar em memória todos os sonhos da query mostPropertyBaseQuery e
         // utilizar nas queries abaixo
 
-        // TODO: criar função para receber o nome da tabela e retornar o AnalysisMost
-        // TODO: nomear "dream_point_of_view_id" para "foreign_id" (nomear todos os selects para a tipagem)
-        // fazer os acima visando diminuir este código
-        const mostPointOfViewOccurence: AnalysisMost = await analysisBaseQuery.clone()
-            .innerJoin('dream_point_of_views', 'dream_point_of_views.id', 'dreams.dream_point_of_view_id')
-            .select('dreams.dream_point_of_view_id', 'dream_point_of_views.description')
-            .count('dream_point_of_view_id as count')
-            .groupBy('dreams.dream_point_of_view_id', 'dream_point_of_views.description')
-            .orderBy('count', 'desc')
-            .limit(1)
-            .then(result => {
-                return {
-                    foreignIdDescription: result[0]["description"],
-                    foreignId: result[0]["dream_point_of_view_id"],
-                    count: result[0]["count"],
-                }
-            })
+        /**
+         * Captura a descrição da chave estrangeira em dreams de maior ocorrência
+         * @param tableName Nome da tabela (SINGULAR)
+        */
+        const getForeignKeyDescriptionMostOccurence = async (tableName: string): Promise<string> => {
+            return await analysisBaseQuery.clone()
+                .innerJoin(`${ tableName }s`, `${ tableName }s.id`, `dreams.${ tableName }_id`)
+                .select(`dreams.${ tableName }_id as foreign_id`, `${ tableName }s.description`)
+                .count(`${ tableName }_id as count`)
+                .groupBy(`dreams.${ tableName }_id`, `${ tableName }s.description`)
+                .orderBy('count', 'desc')
+                .first()
+                .then(result => { return result["description"] as string })
+        }
 
-        const mostHourOccurence: AnalysisMost = await analysisBaseQuery.clone()
-            .innerJoin('dream_hours', 'dream_hours.id', 'dreams.dream_hour_id')
-            .select('dreams.dream_hour_id', 'dream_hours.description')
-            .count('dream_hour_id as count')
-            .groupBy('dreams.dream_hour_id', 'dream_hours.description')
-            .orderBy('count', 'desc')
-            .limit(1)
-            .then(result => {
-                return {
-                    foreignIdDescription: result[0]["description"],
-                    foreignId: result[0]["dream_hour_id"],
-                    count: result[0]["count"],
-                }
-            })
+        const mostPointOfViewOccurence = await getForeignKeyDescriptionMostOccurence("dream_point_of_view")
 
-        const mostDurationOccurence: AnalysisMost = await analysisBaseQuery.clone()
-            .innerJoin('dream_durations', 'dream_durations.id', 'dreams.dream_duration_id')
-            .select('dreams.dream_duration_id', 'dream_durations.description')
-            .count('dream_duration_id as count')
-            .groupBy('dreams.dream_duration_id', 'dream_durations.description')
-            .orderBy('count', 'desc')
-            .limit(1)
-            .then(result => {
-                return {
-                    foreignIdDescription: result[0]["description"],
-                    foreignId: result[0]["dream_duration_id"],
-                    count: result[0]["count"],
-                }
-            })
+        const mostHourOccurence = await getForeignKeyDescriptionMostOccurence("dream_hour")
 
-        const mostLucidityLevelOccurence: AnalysisMost = await analysisBaseQuery.clone()
-            .innerJoin('dream_lucidity_levels', 'dream_lucidity_levels.id', 'dreams.dream_lucidity_level_id')
-            .select('dreams.dream_lucidity_level_id', 'dream_lucidity_levels.description')
-            .count('dream_lucidity_level_id as count')
-            .groupBy('dreams.dream_lucidity_level_id', 'dream_lucidity_levels.description')
-            .orderBy('count', 'desc')
-            .limit(1)
-            .then(result => {
-                return {
-                    foreignIdDescription: result[0]["description"],
-                    foreignId: result[0]["dream_lucidity_level_id"],
-                    count: result[0]["count"],
-                }
-            })
+        const mostDurationOccurence = await getForeignKeyDescriptionMostOccurence("dream_duration")
 
-        const mostDreamTypeOccurence: AnalysisMost = await analysisBaseQuery.clone()
-            .innerJoin('dream_types', 'dream_types.id', 'dreams.dream_type_id')
-            .select('dreams.dream_type_id', 'dream_types.description')
-            .count('dream_type_id as count')
-            .groupBy('dreams.dream_type_id', 'dream_types.description')
-            .orderBy('count', 'desc')
-            .limit(1)
-            .then(result => {
-                return {
-                    foreignIdDescription: result[0]["description"],
-                    foreignId: result[0]["dream_type_id"],
-                    count: result[0]["count"],
-                }
-            })
+        const mostLucidityLevelOccurence = await getForeignKeyDescriptionMostOccurence("dream_lucidity_level")
 
-        const mostRealityLevelOccurenceOccurence: AnalysisMost = await analysisBaseQuery.clone()
-            .innerJoin('dream_reality_levels', 'dream_reality_levels.id', 'dreams.dream_reality_level_id')
-            .select('dreams.dream_reality_level_id', 'dream_reality_levels.description')
-            .count('dream_reality_level_id as count')
-            .groupBy('dreams.dream_reality_level_id', 'dream_reality_levels.description')
-            .orderBy('count', 'desc')
-            .limit(1)
-            .then(result => {
-                return {
-                    foreignIdDescription: result[0]["description"],
-                    foreignId: result[0]["dream_reality_level_id"],
-                    count: result[0]["count"],
-                }
-            })
+        const mostDreamTypeOccurence = await getForeignKeyDescriptionMostOccurence("dream_type")
+
+        const mostRealityLevelOccurenceOccurence = await getForeignKeyDescriptionMostOccurence("dream_reality_level")
 
         const mostClimateOccurence: AnalysisMost = await analysisBaseQuery.clone()
             .select("dreams.climate")
@@ -225,13 +159,13 @@ export default class AnalysisService implements AnalysisServiceProps {
         const dreamAnalysisModel: DreamAnalysisInput = {
             month: month,
             year: year,
-            mostPointOfViewOccurence: mostPointOfViewOccurence.foreignIdDescription,
+            mostPointOfViewOccurence: mostPointOfViewOccurence,
             mostClimateOccurence: mostClimateOccurence.foreignIdDescription,
-            mostHourOccurence: mostHourOccurence.foreignIdDescription,
-            mostDurationOccurence: mostDurationOccurence.foreignIdDescription,
-            mostLucidityLevelOccurence: mostLucidityLevelOccurence.foreignIdDescription,
-            mostDreamTypeOccurence: mostDreamTypeOccurence.foreignIdDescription,
-            mostRealityLevelOccurenceOccurence: mostRealityLevelOccurenceOccurence.foreignIdDescription,
+            mostHourOccurence: mostHourOccurence,
+            mostDurationOccurence: mostDurationOccurence,
+            mostLucidityLevelOccurence: mostLucidityLevelOccurence,
+            mostDreamTypeOccurence: mostDreamTypeOccurence,
+            mostRealityLevelOccurenceOccurence: mostRealityLevelOccurenceOccurence,
             eroticDreamsAverage: eroticDreamsAverage,
             tagPerDreamAverage: tagPerDreamAverage,
             longestDreamTitle: longestDreamTitle,
