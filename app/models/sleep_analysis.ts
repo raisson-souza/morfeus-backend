@@ -4,12 +4,10 @@ import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import User from './user.js'
 
 export default class SleepAnalysis extends BaseModel {
+  public static table = 'sleep_analysis'
+
   @column({ isPrimary: true })
   declare id: number
-
-  /** É análise mensal */
-  @column()
-  declare isMonthAnalysis: boolean
 
   /** Mês */
   @column()
@@ -18,14 +16,6 @@ export default class SleepAnalysis extends BaseModel {
   /** Ano */
   @column()
   declare year: number
-
-  /** Início da semana */
-  @column.date()
-  declare weekStart: DateTime | null
-
-  /** Fim da semana */
-  @column.date()
-  declare weekEnd: DateTime | null
 
   /** Contagem de sonhos */
   @column()
@@ -49,27 +39,26 @@ export default class SleepAnalysis extends BaseModel {
 
   /** Humor mais frequente ao acordar */
   @column()
-  declare mostFrequentWakeUpHumor: string
+  declare mostFrequentWakeUpHumor: string | null
 
   /** Humor menos frequente ao acordar */
   @column()
-  declare leastFrequentWakeUpHumor: string
+  declare leastFrequentWakeUpHumor: string | null
 
   /** Humor mais frequente ao dormir */
   @column()
-  declare mostFrequentLayDownHumor: string
+  declare mostFrequentLayDownHumor: string | null
 
   /** Humor menos frequente ao dormir */
   @column()
-  declare leastFrequentLayDownHumor: string
+  declare leastFrequentLayDownHumor: string | null
 
   /** Ocorrência biológica mais frequente */
   @column()
-  declare mostFrequentBiologicalOccurence: string
+  declare mostFrequentBiologicalOccurence: string | null
 
-  /** Média de duração de sono */
   @column()
-  declare sleepDurationAverage: number
+  declare leastFrequentBiologicalOccurence: string | null
 
   /** Maior noite de sono */
   @column()
@@ -83,6 +72,10 @@ export default class SleepAnalysis extends BaseModel {
   @column()
   declare averageDreamPerSleep: number
 
+  /** Média de duração de sono */
+  @column()
+  declare sleepDurationAverage: number
+
   /** Data de maior quantidade de sonho por noite */
   @column.date()
   declare mostDreamsPerSleepDate: DateTime
@@ -93,4 +86,7 @@ export default class SleepAnalysis extends BaseModel {
   /** Usuário */
   @belongsTo(() => User)
   declare user: BelongsTo<typeof User>
+
+  @column()
+  declare userId: number
 }

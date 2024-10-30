@@ -10,6 +10,7 @@
 import { middleware } from './kernel.js'
 import router from '@adonisjs/core/services/router'
 
+const analysisController = () => import("#controllers/analysis_controller")
 const dreamController = () => import("#controllers/dream_controller")
 const sleepController = () => import("#controllers/sleep_controller")
 const tagController = () => import("#controllers/tag_controller")
@@ -82,6 +83,18 @@ router
         router.get('/list_dreams_by_tag', [tagController, 'listDreamsByTag'])
       })
       .prefix('/tags')
+      .use(middleware.auth({
+        guards: ['api']
+      }))
+
+    router
+      .group(() => {
+        router.post('/dreams', [analysisController, 'createDreamAnalysis'])
+        router.get('/dreams/get', [analysisController, 'getDreamAnalysis'])
+        router.post('/sleeps', [analysisController, 'createSleepAnalysis'])
+        router.get('/sleeps/get', [analysisController, 'getSleepAnalysis'])
+      })
+      .prefix('/analysis')
       .use(middleware.auth({
         guards: ['api']
       }))

@@ -47,6 +47,11 @@ export type ListSleepsByUserProps = {
     dreamsQuantity: number
 }
 
+/** Tipo sono com listagem dos IDs de sonho */
+export type SleepWithDreamsIds = {
+    dreamsId: number[]
+} & SleepOutput
+
 export const sleepInputModel : SleepInput = {
     userId: 0,
     date: DateTime.now(),

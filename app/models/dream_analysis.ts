@@ -4,12 +4,10 @@ import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import User from './user.js'
 
 export default class DreamAnalysis extends BaseModel {
+  public static table = 'dream_analysis'
+
   @column({ isPrimary: true })
   declare id: number
-
-  /** É análise mensal */
-  @column()
-  declare isMonthAnalysis: boolean
 
   /** Mês */
   @column()
@@ -19,41 +17,33 @@ export default class DreamAnalysis extends BaseModel {
   @column()
   declare year: number
 
-  /** Início da semana */
-  @column.date()
-  declare weekStart: DateTime | null
-
-  /** Fim da semana */
-  @column.date()
-  declare weekEnd: DateTime | null
-
   /** Ponto de vista de sonho de maior ocorrência */
   @column()
-  declare mostPointOfViewOccurence: string
+  declare mostPointOfViewOccurence: string | null
 
   /** Clima de sonho de maior ocorrência */
   @column()
-  declare mostClimateOccurence: string
+  declare mostClimateOccurence: string | null
 
   /** Horário de sonho de maior ocorrência */
   @column()
-  declare mostHourOccurence: string
+  declare mostHourOccurence: string | null
 
   /** Duração aparente de sonho de maior ocorrência */
   @column()
-  declare mostDurationOccurence: string
+  declare mostDurationOccurence: string | null
 
   /** Nível de lucidez de sonho de maior ocorrência */
   @column()
-  declare mostLucidityLevelOccurence: string
+  declare mostLucidityLevelOccurence: string | null
 
   /** Tipo de sonho de maior ocorrência */
   @column()
-  declare mostDreamTypeOccurence: string
+  declare mostDreamTypeOccurence: string | null
 
   /** Nível de realidade de sonho de maior ocorrência */
   @column()
-  declare mostRealityLevelOccurenceOccurence: string
+  declare mostRealityLevelOccurenceOccurence: string | null
 
   /** Média de sonho erótico */
   @column()
@@ -73,4 +63,7 @@ export default class DreamAnalysis extends BaseModel {
   /** Usuário */
   @belongsTo(() => User)
   declare user: BelongsTo<typeof User>
+
+  @column()
+  declare userId: number
 }
