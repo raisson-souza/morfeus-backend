@@ -10,56 +10,54 @@ import SleepAnalysis from "#models/sleep_analysis"
 import User from "#models/user"
 
 export default class AnalysisService implements AnalysisServiceProps {
-    // TODO: desestruturar data
-    async GetDreamAnalysis(userId: number, date: DateTime): Promise<DreamAnalysis | null> {
+    async GetDreamAnalysis(userId: number, { month, year }: DateTime): Promise<DreamAnalysis | null> {
         if (!await User.find(userId))
             throw new CustomException(404, "Usuário não encontrado.")
 
-        if (date.month > DateTime.now().month && date.year > DateTime.now().year)
+        if (month > DateTime.now().month && year > DateTime.now().year)
             throw new CustomException(400, "Não existem estatísticas de data maior que a atual.")
 
         return await DreamAnalysis.query()
             .where('user_id', userId)
-            .andWhere('month', date.month)
-            .andWhere('year', date.year)
+            .andWhere('month', month)
+            .andWhere('year', year)
             .select('id')
             .orderBy('id', 'desc')
             .first()
     }
 
-    // TODO: desestruturar data
-    async GetSleepAnalysis(userId: number, date: DateTime): Promise<SleepAnalysis | null> {
+    async GetSleepAnalysis(userId: number, { month, year }: DateTime): Promise<SleepAnalysis | null> {
         if (!await User.find(userId))
             throw new CustomException(404, "Usuário não encontrado.")
 
-        if (date.month > DateTime.now().month && date.year > DateTime.now().year)
+        if (month > DateTime.now().month && year > DateTime.now().year)
             throw new CustomException(400, "Não existem estatísticas de data maior que a atual.")
 
         return await SleepAnalysis.query()
             .where('user_id', userId)
-            .andWhere('month', date.month)
-            .andWhere('year', date.year)
+            .andWhere('month', month)
+            .andWhere('year', year)
             .select('id')
             .orderBy('id', 'desc')
             .first()
     }
 
-    // TODO: desestruturar data
-    async CreateDreamAnalysis(userId: number, date: DateTime): Promise<void> {
+    async CreateDreamAnalysis(userId: number, { month, year }: DateTime): Promise<void> {
         if (!await User.find(userId))
             throw new CustomException(404, "Usuário não encontrado.")
 
-        if (date.month > DateTime.now().month && date.year > DateTime.now().year)
+        if (month > DateTime.now().month && year > DateTime.now().year)
             throw new CustomException(400, "A data de criação da estatística de sonho não pode ser maior que a atual.")
 
+        /** Query base para as próximas consultas */
         const analysisBaseQuery = db
             .from('dreams')
             .innerJoin('sleeps', 'sleeps.id', 'dreams.sleep_id')
             .innerJoin('users', 'users.id', 'sleeps.user_id')
             .where(query => {
                 query.andWhere('sleeps.user_id', userId)
-                query.andWhereRaw('EXTRACT(YEAR FROM sleeps.date) = ?', [ date.year ])
-                query.andWhereRaw('EXTRACT(MONTH FROM sleeps.date) = ?', [ date.month ])
+                query.andWhereRaw('EXTRACT(YEAR FROM sleeps.date) = ?', [ year ])
+                query.andWhereRaw('EXTRACT(MONTH FROM sleeps.date) = ?', [ month ])
             })
 
         // TODO: armazenar em memória todos os sonhos da query mostPropertyBaseQuery e
@@ -225,8 +223,8 @@ export default class AnalysisService implements AnalysisServiceProps {
             })
 
         const dreamAnalysisModel: DreamAnalysisInput = {
-            month: date.month,
-            year: date.year,
+            month: month,
+            year: year,
             mostPointOfViewOccurence: mostPointOfViewOccurence.foreignIdDescription,
             mostClimateOccurence: mostClimateOccurence.foreignIdDescription,
             mostHourOccurence: mostHourOccurence.foreignIdDescription,
@@ -242,8 +240,8 @@ export default class AnalysisService implements AnalysisServiceProps {
 
         const previousDreamAnalysisId: number | undefined = await DreamAnalysis.query()
             .where('user_id', userId)
-            .andWhere('month', date.month)
-            .andWhere('year', date.year)
+            .andWhere('month', month)
+            .andWhere('year', year)
             .select('id')
             .orderBy('id', 'desc')
             .first()
