@@ -4,7 +4,7 @@ export type DreamAnalysisInput = {
     month: number
     year: number
     mostPointOfViewOccurence?: string
-    mostClimateOccurence?: string
+    mostClimateOccurence?: string | null
     mostHourOccurence?: string
     mostDurationOccurence?: string
     mostLucidityLevelOccurence?: string
@@ -47,13 +47,6 @@ export type SleepAnalysisOutput = {
 } & SleepAnalysisInput
 
 // TIPOS PERSONALIZADOS
-
-/** Tipo para maior dado de análise */
-export type AnalysisMost = {
-    foreignIdDescription: string
-    foreignId: number
-    count: number
-}
 
 /** Tipo de contagem para climas */
 export type DreamClimatesCount = {
@@ -115,5 +108,17 @@ export type FrequentHumorAnalysis = {
 /** Tipo para frequência de ocorrências biológicas */
 export type FrequentBiologicalOccurenceAnalysis = {
     biologicalOccurence: string | null
+    count: number
+}
+
+/** Tipo para contagem de climas */
+export type ClimateCountAnalysis = {
+    climate: string | null
+    count: number
+}
+
+/** Tipo para  */
+export type LongestDreamTitleAnalysis = {
+    title: string
     count: number
 }

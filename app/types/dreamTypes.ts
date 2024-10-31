@@ -58,6 +58,14 @@ export type DreamWithTags = {
     }[]
 } & DreamInput
 
+/** Tipo de sonho integrado com lista de tags */
+export type DreamOutputWithTags = {
+    tags: {
+        tagId: number
+        tagTitle: string
+    }[]
+} & DreamOutput
+
 export type ListDreamsByUser = {
     /** ID do usuário */
     userId: number

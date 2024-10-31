@@ -1,5 +1,6 @@
-import { AnalysisMost, DreamAnalysisInput, DreamClimatesCount, FrequentBiologicalOccurenceAnalysis, FrequentHumorAnalysis, SleepAnalysisBiologicalOccurencesCount, SleepAnalysisInput, SleepHumorCount } from "../types/analysisTypes.js"
+import { ClimateCountAnalysis, DreamAnalysisInput, DreamClimatesCount, FrequentBiologicalOccurenceAnalysis, FrequentHumorAnalysis, LongestDreamTitleAnalysis, SleepAnalysisBiologicalOccurencesCount, SleepAnalysisInput, SleepHumorCount } from "../types/analysisTypes.js"
 import { DateTime } from "luxon"
+import { DreamOutputWithTags } from "../types/dreamTypes.js"
 import { SleepWithDreamsIds } from "../types/sleepTypes.js"
 import AnalysisServiceProps from "./types/analysis_service_props.js"
 import CustomException from "#exceptions/custom_exception"
@@ -7,6 +8,7 @@ import db from "@adonisjs/lucid/services/db"
 import Dream from "#models/dream"
 import DreamAnalysis from "#models/dream_analysis"
 import SleepAnalysis from "#models/sleep_analysis"
+import Tag from "#models/tag"
 import User from "#models/user"
 
 export default class AnalysisService implements AnalysisServiceProps {
@@ -60,9 +62,55 @@ export default class AnalysisService implements AnalysisServiceProps {
                 query.andWhereRaw('EXTRACT(MONTH FROM sleeps.date) = ?', [ month ])
             })
 
-        // TODO: armazenar em memória todos os sonhos da query mostPropertyBaseQuery e
-        // utilizar nas queries abaixo
+        const getUserDreams = async (): Promise<DreamOutputWithTags[]> => {
+            const userDreams: DreamOutputWithTags[] = await analysisBaseQuery.clone()
+                .select('dreams.*')
+                .then(result => {
+                    const dreamWithTags: DreamOutputWithTags[] = []
+                    result.map(dream => {
+                        dreamWithTags.push({
+                            id: dream["id"],
+                            sleepId: dream["sleep_id"],
+                            title: dream["title"],
+                            description: dream["description"],
+                            dreamPointOfViewId: dream["dream_point_of_view_id"],
+                            climate: dream["climate"],
+                            dreamHourId: dream["dream_hour_id"],
+                            dreamDurationId: dream["dream_duration_id"],
+                            dreamLucidityLevelId: dream["dream_lucidity_level_id"],
+                            dreamTypeId: dream["dream_type_id"],
+                            dreamRealityLevelId: dream["dream_reality_level_id"],
+                            eroticDream: dream["erotic_dream"],
+                            hiddenDream: dream["hidden_dream"],
+                            personalAnalysis: dream["personal_analysis"],
+                            dreamOriginId: dream["dream_origin_id"],
+                            isComplete: dream["is_complete"],
+                            tags: [],
+                        })
+                    })
+                    return dreamWithTags
+                })
 
+            let i = 0
+            for (const dream of userDreams) {
+                const tags = await Tag.query()
+                    .innerJoin('dream_tags', 'dream_tags.tag_id', 'tags.id')
+                    .innerJoin('dreams', 'dreams.id', 'dream_tags.dream_id')
+                    .where('dreams.id', dream.id)
+                    .select('tags.id', 'tags.title')
+                tags.map(tag => {
+                    userDreams[i].tags.push({ tagId: tag.id, tagTitle: tag.title })
+                })
+                i++
+            }
+
+            return userDreams
+        }
+        const userDreams = await getUserDreams()
+
+        // TODO: futuramente aproveitar a busca geral de sonhos.
+        // adicionar todos os innerJoins e incluir o ID e descrição da chave estrangeira
+        // criar novo type para isso
         /**
          * Captura a descrição da chave estrangeira em dreams de maior ocorrência
          * @param tableName Nome da tabela (SINGULAR)
@@ -90,84 +138,70 @@ export default class AnalysisService implements AnalysisServiceProps {
 
         const mostRealityLevelOccurenceOccurence = await getForeignKeyDescriptionMostOccurence("dream_reality_level")
 
-        const mostClimateOccurence: AnalysisMost = await analysisBaseQuery.clone()
-            .select("dreams.climate")
-            .then(result => {
-                const climatesCount: DreamClimatesCount = {
-                    ameno: 0,
-                    calor: 0,
-                    garoa: 0,
-                    chuva: 0,
-                    tempestade: 0,
-                    nevoa: 0,
-                    neve: 0,
-                    multiplos: 0,
-                    outro: 0,
-                    indefinido: 0,
-                }
-                result.map(climate => {
-                    if (climate.climate["ameno"]) climatesCount.ameno++
-                    if (climate.climate["calor"]) climatesCount.calor++
-                    if (climate.climate["garoa"]) climatesCount.garoa++
-                    if (climate.climate["chuva"]) climatesCount.chuva++
-                    if (climate.climate["tempestade"]) climatesCount.tempestade++
-                    if (climate.climate["nevoa"]) climatesCount.nevoa++
-                    if (climate.climate["neve"]) climatesCount.neve++
-                    if (climate.climate["multiplos"]) climatesCount.multiplos++
-                    if (climate.climate["outro"]) climatesCount.outro++
-                    if (climate.climate["indefinido"]) climatesCount.indefinido++
-                })
-                const _mostClimateOccurence = Object.entries(climatesCount)
-                    .reduce((acc, [climate, count]) => {
-                            return count > acc.count ? { climate, count } : acc
-                        },
-                        { climate: "", count: 0 }
-                    )
-                return {
-                    foreignIdDescription: _mostClimateOccurence.climate,
-                    foreignId: 0,
-                    count: _mostClimateOccurence.count,
-                }
+        const mostClimateOccurence = (): string | null => {
+            const climatesCount: DreamClimatesCount = {
+                ameno: 0,
+                calor: 0,
+                garoa: 0,
+                chuva: 0,
+                tempestade: 0,
+                nevoa: 0,
+                neve: 0,
+                multiplos: 0,
+                outro: 0,
+                indefinido: 0,
+            }
+
+            userDreams.map(dream => {
+                if (dream.climate.ameno) climatesCount.ameno++
+                if (dream.climate.calor) climatesCount.calor++
+                if (dream.climate.garoa) climatesCount.garoa++
+                if (dream.climate.chuva) climatesCount.chuva++
+                if (dream.climate.tempestade) climatesCount.tempestade++
+                if (dream.climate.nevoa) climatesCount.nevoa++
+                if (dream.climate.neve) climatesCount.neve++
+                if (dream.climate.multiplos) climatesCount.multiplos++
+                if (dream.climate.outro) climatesCount.outro++
+                if (dream.climate.indefinido) climatesCount.indefinido++
             })
 
-        const totalDreamsCount: number = await analysisBaseQuery.clone()
-            .countDistinct('dreams.id')
-            .then(result => { return Number.parseInt(result[0]["count"]) })
+            return Object.entries(climatesCount)
+                .reduce((climatesCountAnalysisControl, [climate, count]) => {
+                        return count > climatesCountAnalysisControl.count ? { climate, count } : climatesCountAnalysisControl
+                    },
+                    { climate: null, count: 0 } as ClimateCountAnalysis
+                ).climate
+        }
 
-        const eroticDreamsAverage: number = await analysisBaseQuery.clone()
-            .andWhere('dreams.erotic_dream', true)
-            .countDistinct('dreams.id')
-            .then(result => {
-                return ((Number.parseInt(result[0]["count"]) / totalDreamsCount) || 0) * 100
+        const totalDreamsCount: number = userDreams.length
+
+        const eroticDreamsAverage: number = (userDreams.filter(dream => dream.eroticDream).length / totalDreamsCount) * 100
+
+        const longestDreamTitle: string = userDreams.reduce((longestDreamTitleAnalysisControl, dream) => {
+            return dream.title.length > longestDreamTitleAnalysisControl.title.length ? { title: dream.title, count: dream.title.length } : longestDreamTitleAnalysisControl
+        }, { title: userDreams[0].title, count: userDreams[0].title.length } as LongestDreamTitleAnalysis)
+        .title
+
+        const tagPerDreamAverage = (): number => {
+            let totalTags = 0
+            userDreams.map(dream => {
+                totalTags += dream.tags.length
             })
-
-        const longestDreamTitle: string = await analysisBaseQuery.clone()
-            .select('dreams.title')
-            .orderByRaw('LENGTH(description) DESC')
-            .first()
-            .then(result => { return result["title"] })
-
-        const tagPerDreamAverage: number = await analysisBaseQuery.clone()
-            .innerJoin('dream_tags', 'dream_tags.dream_id', 'dreams.id')
-            .innerJoin('tags', 'tags.id', 'dream_tags.tag_id')
-            .countDistinct('dream_tags.id')
-            .first()
-            .then(result => {
-                return (Number.parseInt(result["count"]) / totalDreamsCount) || 0
-            })
+            return totalTags / userDreams.length
+        }
 
         const dreamAnalysisModel: DreamAnalysisInput = {
             month: month,
             year: year,
             mostPointOfViewOccurence: mostPointOfViewOccurence,
-            mostClimateOccurence: mostClimateOccurence.foreignIdDescription,
+            mostClimateOccurence: mostClimateOccurence(),
             mostHourOccurence: mostHourOccurence,
             mostDurationOccurence: mostDurationOccurence,
             mostLucidityLevelOccurence: mostLucidityLevelOccurence,
             mostDreamTypeOccurence: mostDreamTypeOccurence,
             mostRealityLevelOccurenceOccurence: mostRealityLevelOccurenceOccurence,
             eroticDreamsAverage: eroticDreamsAverage,
-            tagPerDreamAverage: tagPerDreamAverage,
+            tagPerDreamAverage: tagPerDreamAverage(),
             longestDreamTitle: longestDreamTitle,
             userId: userId,
         }
