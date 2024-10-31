@@ -350,7 +350,6 @@ export default class AnalysisService implements AnalysisServiceProps {
                 if (sleep.wakeUpHumor.tiredness) wakeUpHumorCount.tiredness++
             })
 
-            // TODO: corrigir mostFrequentWakeUpHumor para ser um número como em mostSleepDuration
             const mostFrequentWakeUpHumor = Object.entries(wakeUpHumorCount)
                 .reduce((acc, [humor, count]) => {
                         return count > acc.count ? { humor: humor, count } : acc
@@ -382,7 +381,6 @@ export default class AnalysisService implements AnalysisServiceProps {
                 if (sleep.wakeUpHumor.tiredness) wakeUpHumorCount.tiredness++
             })
 
-            // TODO: corrigir leastFrequentWakeUpHumor para ser um número como em mostSleepDuration
             const leastFrequentWakeUpHumor = Object.entries(wakeUpHumorCount)
                 .reduce((acc, [humor, count]) => {
                         return count < acc.count ? { humor: humor, count } : acc
@@ -414,7 +412,6 @@ export default class AnalysisService implements AnalysisServiceProps {
                 if (sleep.layDownHumor.tiredness) layDownHumorCount.tiredness++
             })
 
-            // TODO: corrigir mostFrequentWakeUpHumor para ser um número como em mostSleepDuration
             const mostFrequentWakeUpHumor = Object.entries(layDownHumorCount)
                 .reduce((acc, [humor, count]) => {
                         return count > acc.count ? { humor: humor, count } : acc
@@ -446,7 +443,6 @@ export default class AnalysisService implements AnalysisServiceProps {
                 if (sleep.layDownHumor.tiredness) layDownHumorCount.tiredness++
             })
 
-            // TODO: corrigir leastFrequentWakeUpHumor para ser um número como em mostSleepDuration
             const leastFrequentWakeUpHumor = Object.entries(layDownHumorCount)
                 .reduce((acc, [humor, count]) => {
                         return count < acc.count ? { humor: humor, count } : acc
@@ -494,7 +490,6 @@ export default class AnalysisService implements AnalysisServiceProps {
                 if (sleep.biologicalOccurences.polucao) biologicalOccurencesCount.polucao
             })
 
-            // TODO: corrigir mostFrequentWakeUpHumor para ser um número como em mostSleepDuration
             const mostFrequentWakeUpHumor = Object.entries(biologicalOccurencesCount)
                 .reduce((acc, [biologicalOccurence, count]) => {
                         return count > acc.count ? { biologicalOccurence: biologicalOccurence, count } : acc
@@ -542,7 +537,6 @@ export default class AnalysisService implements AnalysisServiceProps {
                 if (sleep.biologicalOccurences.polucao) biologicalOccurencesCount.polucao
             })
 
-            // TODO: corrigir biologicalOccurenceControl para ser um número como em mostSleepDuration
             const mostFrequentWakeUpHumor = Object.entries(biologicalOccurencesCount)
                 .reduce((biologicalOccurenceControl, [biologicalOccurence, count]) => {
                         return count < biologicalOccurenceControl.count ? { biologicalOccurence: biologicalOccurence, count } : biologicalOccurenceControl
