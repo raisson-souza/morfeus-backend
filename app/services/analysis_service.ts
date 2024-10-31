@@ -108,6 +108,9 @@ export default class AnalysisService implements AnalysisServiceProps {
         }
         const userDreams = await getUserDreams()
 
+        if (userDreams.length === 0)
+            throw new CustomException(500, "Não há sonhos o suficiente para a criação da estatística.")
+
         // TODO: futuramente aproveitar a busca geral de sonhos.
         // adicionar todos os innerJoins e incluir o ID e descrição da chave estrangeira
         // criar novo type para isso
@@ -233,8 +236,8 @@ export default class AnalysisService implements AnalysisServiceProps {
         /** Query base para as próximas consultas */
         const analysisBaseQuery = db
             .from('sleeps')
-            .innerJoin('dreams', 'dreams.sleep_id', 'sleeps.id')
-            .innerJoin('users', 'users.id', 'sleeps.user_id')
+            .fullOuterJoin('dreams', 'dreams.sleep_id', 'sleeps.id')
+            .fullOuterJoin('users', 'users.id', 'sleeps.user_id')
             .where(query => {
                 query.andWhere('sleeps.user_id', userId)
                 query.andWhereRaw('EXTRACT(YEAR FROM sleeps.date) = ?', [ year ])
@@ -279,13 +282,16 @@ export default class AnalysisService implements AnalysisServiceProps {
         }
         const userSleeps = await getUserSleeps()
 
+        if (userSleeps.length === 0)
+            throw new CustomException(500, "Não há sonos o suficiente para a criação da estatística.")
+
         // TODO: validar fazer um map geral e com ifs capturar todos os dados de busca
         // evitar multiplos maps e filters
 
         const dreamsCount: number = await analysisBaseQuery.clone()
             .count('dreams.id')
             .first()
-            .then(result => { return result["count"] })
+            .then(result => { return Number.parseInt(result["count"]) })
 
         const goodWakeUpHumorPercentage = (): number => {
             const goodWakeUpHumorCount: number = userSleeps.filter(sleep =>
@@ -547,6 +553,10 @@ export default class AnalysisService implements AnalysisServiceProps {
             return mostFrequentWakeUpHumor.biologicalOccurence
         }
 
+        const defaultLeastSleepDurationControlValue = userSleeps.filter(sleep =>
+            sleep.sleepTime != undefined
+        )[0].sleepTime!
+
         /** Captura a duração do maior e menor sono */
         const sleepDurationAnalysis = userSleeps.reduce((sleepDurationControl, sleep) => {
             const currentAnalysisControl = {
@@ -564,7 +574,7 @@ export default class AnalysisService implements AnalysisServiceProps {
             return currentAnalysisControl
         }, {
             mostSleepDuration: 0,
-            leastSleepDuration: 0,
+            leastSleepDuration: defaultLeastSleepDurationControlValue,
         })
 
         const averageDreamPerSleep = (): number => {
