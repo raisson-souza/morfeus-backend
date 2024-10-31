@@ -23,7 +23,7 @@ export default class AnalysisService implements AnalysisServiceProps {
             .where('user_id', userId)
             .andWhere('month', month)
             .andWhere('year', year)
-            .select('id')
+            .select('*')
             .orderBy('id', 'desc')
             .first()
     }
@@ -39,7 +39,7 @@ export default class AnalysisService implements AnalysisServiceProps {
             .where('user_id', userId)
             .andWhere('month', month)
             .andWhere('year', year)
-            .select('id')
+            .select('*')
             .orderBy('id', 'desc')
             .first()
     }
