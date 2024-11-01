@@ -31,7 +31,11 @@ export default function ResponseSender<T>({
     data,
     status = 201,
 }: ResponseSenderProps<T>): void {
-    if (data instanceof CustomException || data instanceof Error) {
+    if (data instanceof CustomException) {
+        response.status(data.status).json({ data: data.message } as ResponseMessage<T>)
+        ErrorLogger(data.message)
+    }
+    else if (data instanceof Error) {
         response.status(500).json({ data: data.message } as ResponseMessage<T>)
         ErrorLogger(data.message)
     }
