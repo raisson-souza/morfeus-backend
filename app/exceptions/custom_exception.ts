@@ -1,5 +1,6 @@
 import { Exception } from '@adonisjs/core/exceptions'
 import { HttpContext } from '@adonisjs/core/http'
+import ResponseSender from '../functions/core/ResponseMessage.js'
 
 export default class CustomException extends Exception {
   constructor(code: number, message: string) {
@@ -7,6 +8,6 @@ export default class CustomException extends Exception {
   }
 
   public async handle(error: this, { response } : HttpContext) {
-    return response.status(error.status).send(error.message )
+    ResponseSender<string>({ response, data: error })
   }
 }
