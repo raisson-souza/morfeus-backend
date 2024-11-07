@@ -29,7 +29,7 @@ type ResponseSenderProps<T> = {
 export default function ResponseSender<T>({
     response,
     data,
-    status = 201,
+    status = 200,
 }: ResponseSenderProps<T>): void {
     if (data instanceof CustomException) {
         response.status(data.status).json({ data: data.message } as ResponseMessage<T>)
