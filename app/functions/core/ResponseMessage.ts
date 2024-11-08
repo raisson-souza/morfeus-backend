@@ -1,3 +1,4 @@
+import { errors } from "@vinejs/vine"
 import CustomException from '#exceptions/custom_exception'
 import type { Response as AdonisResponse } from '@adonisjs/core/http'
 
@@ -33,6 +34,19 @@ export default function ResponseSender<T>({
 }: ResponseSenderProps<T>): void {
     if (data instanceof CustomException) {
         response.status(data.status).json({ data: data.message } as ResponseMessage<T>)
+        ErrorLogger(data.message)
+    }
+    else if (data instanceof errors.E_VALIDATION_ERROR) {
+        let errorMessage = ""
+        try {
+            (data.messages as any[]).map((vineError: any, i) => {
+                errorMessage += `${ vineError.message }${ i < data.messages.length - 1 ? "\n" : ""}`
+            })
+        }
+        catch {
+            errorMessage = "Ocorreu um erro na validação da requisição."
+        }
+        response.status(400).json({ data: errorMessage } as ResponseMessage<string>)
         ErrorLogger(data.message)
     }
     else if (data instanceof Error) {

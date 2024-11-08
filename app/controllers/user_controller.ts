@@ -1,5 +1,7 @@
 import { createUserValidator, loginValidator, updateUserValidator } from '#validators/user'
+import { DateTime } from 'luxon'
 import { inject } from '@adonisjs/core'
+import { LoginResponse } from '../types/loginTypes.js'
 import { ModelPaginatorContract } from '@adonisjs/lucid/types/model'
 import { paginationValidator } from '#validators/system'
 import CustomException from '#exceptions/custom_exception'
@@ -77,7 +79,11 @@ export default class UserController {
         try {
             const { email, password } = await request.validateUsing(loginValidator)
             const token = await this.userService.Login(email, password)
-            ResponseSender<string>({ response, data: token.value?.release() ?? "" })
+            const loginResponse: LoginResponse = {
+                token: token.value?.release() ?? "",
+                expirationDateMilis: DateTime.fromJSDate(token.expiresAt ?? new Date()).toUnixInteger()
+            }
+            ResponseSender<LoginResponse>({ response, data: loginResponse })
         }
         catch (ex) {
             ResponseSender<string>({ response, data: ex as Error })
