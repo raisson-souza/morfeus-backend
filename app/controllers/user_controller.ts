@@ -81,7 +81,8 @@ export default class UserController {
             const token = await this.userService.Login(email, password)
             const loginResponse: LoginResponse = {
                 token: token.value?.release() ?? "",
-                expirationDateMilis: DateTime.fromJSDate(token.expiresAt ?? new Date()).toUnixInteger()
+                expirationDateMilis: DateTime.fromJSDate(token.expiresAt ?? new Date()).toUnixInteger(),
+                userId: Number.parseInt(token.tokenableId.toString()),
             }
             ResponseSender<LoginResponse>({ response, data: loginResponse })
         }
