@@ -40,7 +40,7 @@ export default class extends BaseSchema {
       table.increments('id')
       table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE').notNullable()
       table.date('date').notNullable()
-      table.integer('sleep_time')
+      table.float('sleep_time', 2)
       table.timestamp('sleep_start')
       table.timestamp('sleep_end')
       table.jsonb('wake_up_humor').defaultTo(JSON.stringify(defaultHumor))

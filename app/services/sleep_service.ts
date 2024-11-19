@@ -188,12 +188,13 @@ export default class SleepService implements SleepServiceProps {
         else if (sleepEnd && sleep) {
             if (sleep.sleepStart) sleepTime = sleepEnd.diff(sleep.sleepStart, "hours").hours
         }
+        else sleepTime = 0
 
         const sleepModel: SleepInput = {
             ...sleepInputModel,
             sleepStart: sleepStart,
             sleepEnd: sleepEnd,
-            sleepTime: sleepTime,
+            sleepTime: Number.parseFloat(sleepTime!.toPrecision(2)),
             userId: userId,
             date: dateYesterday,
         }
