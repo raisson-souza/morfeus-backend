@@ -44,7 +44,7 @@ export default class SleepController {
                     dreamRealityLevelId: dream.dreamRealityLevelId,
                     eroticDream: dream.eroticDream,
                     hiddenDream: dream.hiddenDream,
-                    personalAnalysis: dream.personalAnalysis ?? "",
+                    personalAnalysis: dream.personalAnalysis,
                     sleepId: 0,
                     dreamOriginId: 1,
                     tags: dream.tags,
@@ -55,7 +55,7 @@ export default class SleepController {
             await this.sleepService.Create({
                 userId: auth.user!.id,
                 date: DateTime.fromJSDate(sleep.date),
-                sleepTime: sleep.sleepTime,
+                sleepTime: this.calculateSleepTime(sleep.sleepStart, sleep.sleepEnd),
                 sleepStart: DateTime.fromJSDate(sleep.sleepStart),
                 sleepEnd: DateTime.fromJSDate(sleep.sleepEnd),
                 wakeUpHumor: sleep.wakeUpHumor,
@@ -78,7 +78,7 @@ export default class SleepController {
                 userId: auth.user!.id,
                 id: sleep.id,
                 date: DateTime.fromJSDate(sleep.date),
-                sleepTime: sleep.sleepTime,
+                sleepTime: this.calculateSleepTime(sleep.sleepStart, sleep.sleepEnd),
                 sleepStart: DateTime.fromJSDate(sleep.sleepStart),
                 sleepEnd: DateTime.fromJSDate(sleep.sleepEnd),
                 wakeUpHumor: sleep.wakeUpHumor,
@@ -173,5 +173,15 @@ export default class SleepController {
         catch (ex) {
             ResponseSender<string>({ response, data: ex as Error })
         }
+    }
+
+    private calculateSleepTime(sleepStart: Date, sleepEnd: Date): number {
+        const sleepStartDate = DateTime.fromJSDate(sleepStart)
+        const sleepEndDate = DateTime.fromJSDate(sleepEnd)
+
+        if (sleepStartDate > sleepEndDate)
+            throw new CustomException(400, "Horário de ir dormir e acordar inválido.")
+
+        return sleepEndDate.diff(sleepStartDate, "hours").hours
     }
 }

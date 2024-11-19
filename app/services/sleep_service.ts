@@ -22,6 +22,7 @@ export default class SleepService implements SleepServiceProps {
 
         return await db.transaction(async (trx) => {
             if (validate) await this.Validate(sleep)
+            this.ValidateSleepHumor(sleep)
             const sleepModel: SleepInput = {
                 userId: sleep.userId,
                 date: sleep.date,
@@ -53,12 +54,12 @@ export default class SleepService implements SleepServiceProps {
         })
     }
 
-    async Update(sleep: SleepOutput, validate = true) : Promise<Sleep> {
+    async Update(sleep: SleepOutput, _ = false) : Promise<Sleep> {
         const foundUser = await this.Get(sleep.id)
         if (!foundUser) throw new CustomException(404, "Sono não encontrado.")
 
         return await db.transaction(async (trx) => {
-            if (validate) await this.Validate(sleep)
+            this.ValidateSleepHumor(sleep)
             return await Sleep.updateOrCreate({ id: sleep.id }, sleep, { client: trx })
         })
     }
@@ -66,7 +67,9 @@ export default class SleepService implements SleepServiceProps {
     async Validate(sleep: SleepInput): Promise<void> {
         const sameDateSleep = await Sleep.findBy('date', sleep.date)
         if (sameDateSleep) throw new CustomException(400, "Sono de mesma data já cadastrado.")
+    }
 
+    private ValidateSleepHumor(sleep: SleepInput) {
         if (
             (sleep.wakeUpHumor.undefinedHumor && sleep.wakeUpHumor.other) ||
             (sleep.layDownHumor.undefinedHumor && sleep.layDownHumor.other) ||
