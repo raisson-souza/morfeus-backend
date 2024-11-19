@@ -23,7 +23,13 @@ export default class UserService implements UserServiceProps {
         })
     }
 
-    async Validate(_: UserInput): Promise<void> { }
+    async Validate(user: UserInput): Promise<void> {
+        const sameEmailUser = await User.query()
+            .where("email", user.email)
+            .first()
+        if (sameEmailUser)
+            throw new CustomException(400, "Email já em uso no sistema.")
+    }
 
     async Get(id: number) {
         return await User.find(id)
