@@ -234,11 +234,11 @@ export default class SleepService implements SleepServiceProps {
 
         for (const tag of tags) {
             let tagId: null | number = null
-            await Tag.findBy('title', tag.toLowerCase(), { client: trx })
+            await Tag.findBy('title', tag.toUpperCase(), { client: trx })
                 .then(result => { if (result) tagId = result.id})
 
             if (!tagId) {
-                const tagModel: TagInput = { title: tag.toLowerCase() }
+                const tagModel: TagInput = { title: tag.toUpperCase() }
                 const newTag = await Tag.create(tagModel, { client: trx })
                 tagId = newTag.id
             }

@@ -354,12 +354,12 @@ export default class DreamService implements DreamServiceProps {
         for (const tag of tags) {
             let tagId: null | number = null
             // Procura se a tag já existe
-            await Tag.findBy('title', tag.toLowerCase(), { client: trx })
+            await Tag.findBy('title', tag.toUpperCase(), { client: trx })
                 .then(result => { if (result) tagId = result.id})
 
             // Se a tag não existe, cria uma nova
             if (!tagId) {
-                const tagModel: TagInput = { title: tag.toLowerCase() }
+                const tagModel: TagInput = { title: tag.toUpperCase() }
                 const newTag = await Tag.create(tagModel, { client: trx })
                 tagId = newTag.id
             }
