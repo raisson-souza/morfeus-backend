@@ -102,8 +102,14 @@ export default class SleepService implements SleepServiceProps {
     }
 
     async Delete(id: number) {
-        const sleep = await Sleep.find(id)
-        if (!sleep) throw new CustomException(404, "Sono não encontrado.")
+        const sleep = await Sleep.query()
+            .preload("dreams")
+            .where("id", id)
+            .first()
+        if (!sleep)
+            throw new CustomException(404, "Sono não encontrado.")
+        if (sleep.dreams.length > 0)
+            throw new CustomException(500, "Existem sonhos cadastrados nesta noite de sono, para excluir este sono edite a data dos sonhos ou os exclua individualmente.")
         await sleep.delete()
     }
 
