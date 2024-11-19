@@ -135,7 +135,7 @@ export default class DreamService implements DreamServiceProps {
         })
     }
 
-    async Update(dream: DreamCompleteUpdateInput, validate = true): Promise<Dream> {
+    async Update(dream: DreamCompleteUpdateInput, _ = true): Promise<Dream> {
         const sleepExists = await Sleep.find(dream.sleepId)
         if (!sleepExists) throw new CustomException(404, "Sono não encontrado.")
 
@@ -160,7 +160,14 @@ export default class DreamService implements DreamServiceProps {
                 dreamOriginId: dream.dreamOriginId,
                 isComplete: true,
             }
-            if (validate) await this.Validate(updateDreamModel)
+
+            const sameDreamTitle = await Dream.query()
+                .where("title", updateDreamModel.title)
+                .andWhereNot("id", dream.id)
+                .first()
+            if (sameDreamTitle)
+                throw new CustomException(400, "Um sonho com o mesmo título já existe.")
+
             const newDream = await Dream.updateOrCreate({ id: dream.id }, updateDreamModel, { client: trx })
             await this.CreateTags(dream.tags, newDream.id, trx)
             return newDream
