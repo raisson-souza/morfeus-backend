@@ -8,7 +8,6 @@ export default class extends BaseSchema {
       table.increments('id')
       table.string('title').notNullable()
       table.timestamp('created_at').defaultTo(this.db.rawQuery('now()').knexQuery)
-      table.timestamp('updated_at')
     })
   }
 

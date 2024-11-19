@@ -19,7 +19,7 @@ export default class extends BaseSchema {
       table.decimal('tag_per_dream_average').notNullable()
       table.string('longest_dream_title').notNullable()
       table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE')
-      table.timestamp('updated_at').defaultTo(this.db.rawQuery('now()').knexQuery)
+      table.timestamp('updated_at')
     })
   }
 

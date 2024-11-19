@@ -1,4 +1,4 @@
-import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
+import { BaseModel, beforeUpdate, belongsTo, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import User from './user.js'
@@ -57,7 +57,7 @@ export default class DreamAnalysis extends BaseModel {
   @column()
   declare longestDreamTitle: string
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  @column.dateTime()
   declare updatedAt: DateTime
 
   /** Usuário */
@@ -66,4 +66,9 @@ export default class DreamAnalysis extends BaseModel {
 
   @column()
   declare userId: number
+
+  @beforeUpdate()
+  static async update(dreamAnalysis: DreamAnalysis) {
+    dreamAnalysis.updatedAt = DateTime.now()
+  }
 }

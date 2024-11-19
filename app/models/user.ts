@@ -1,4 +1,4 @@
-import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
+import { BaseModel, beforeUpdate, column, hasMany } from '@adonisjs/lucid/orm'
 import { compose } from '@adonisjs/core/helpers'
 import { DateTime } from 'luxon'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
@@ -31,7 +31,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  @column.dateTime()
   declare updatedAt: DateTime | null
 
   /** Sonos */
@@ -47,4 +47,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare dreamsAnalysis: HasMany<typeof DreamAnalysis>
 
   static accessTokens = DbAccessTokensProvider.forModel(User)
+
+  @beforeUpdate()
+  static async update(user: User) {
+    user.updatedAt = DateTime.now()
+  }
 }

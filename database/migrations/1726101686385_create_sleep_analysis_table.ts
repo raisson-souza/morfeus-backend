@@ -25,7 +25,7 @@ export default class extends BaseSchema {
       table.decimal('sleep_duration_average').notNullable()
       table.date('most_dreams_per_sleep_date').notNullable()
       table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE')
-      table.timestamp('updated_at').defaultTo(this.db.rawQuery('now()').knexQuery)
+      table.timestamp('updated_at')
     })
   }
 
