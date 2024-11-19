@@ -1,6 +1,6 @@
 {
-  "name": "morfeus-backend-dev-sis-2",
-  "version": "0.0.1",
+  "name": "morfeus-backend",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "license": "UNLICENSED",
