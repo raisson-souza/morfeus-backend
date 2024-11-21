@@ -51,9 +51,8 @@ router
         router.post('/', [sleepController, 'create']),
         router.put('/', [sleepController, 'update']),
         router.get('/list', [sleepController, 'list']),
-        router.get('/ask_simple_sleep', [sleepController, 'askSimpleSleep'])
         router.post('/simple_sleep', [sleepController, 'createSimpleSleep']),
-        router.get('/get_simple_sleep', [sleepController, 'getSimpleSleep'])
+        router.get('/simple_sleep', [sleepController, 'getSimpleSleep'])
         router.get('/:id', [sleepController, 'get'])
         router.delete('/:id', [sleepController, 'delete'])
       })

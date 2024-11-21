@@ -23,6 +23,7 @@ export default class SleepService implements SleepServiceProps {
         return await db.transaction(async (trx) => {
             if (validate) await this.Validate(sleep)
             this.ValidateSleepHumor(sleep)
+            this.ValidateSleepTime(sleep.sleepTime ?? 0)
             const sleepModel: SleepInput = {
                 userId: sleep.userId,
                 date: sleep.date,
@@ -60,6 +61,7 @@ export default class SleepService implements SleepServiceProps {
 
         return await db.transaction(async (trx) => {
             this.ValidateSleepHumor(sleep)
+            this.ValidateSleepTime(sleep.sleepTime ?? 0)
             return await Sleep.updateOrCreate({ id: sleep.id }, sleep, { client: trx })
         })
     }
@@ -98,6 +100,10 @@ export default class SleepService implements SleepServiceProps {
                 )
             )
         ) throw new CustomException(400, "Humor ao acordar ou ao dormir inválido.")
+    }
+
+    private ValidateSleepTime(sleepTime: number): void {
+        if (sleepTime > 24) throw new CustomException(400, "Tempo de sono inválido.")
     }
 
     async Get(id: number) {
@@ -170,9 +176,6 @@ export default class SleepService implements SleepServiceProps {
             userId
         } = simpleSleep
 
-        if (!await this.AskSimpleSleep(userId, date.toJSDate()))
-            throw new CustomException(500, "Este sono simples não pode ser criado ou editado pois um sono real já foi cadastrado na mesma data.")
-
         let sleepTime: number | undefined = undefined
         const dateYesterday = date.minus(86400000)
         const sleep = await Sleep.findBy("date", dateYesterday.toJSDate())
@@ -190,6 +193,8 @@ export default class SleepService implements SleepServiceProps {
         }
         else sleepTime = 0
 
+        this.ValidateSleepTime(sleepTime ?? 0)
+
         const sleepModel: SleepInput = {
             ...sleepInputModel,
             sleepStart: sleepStart,
@@ -201,18 +206,6 @@ export default class SleepService implements SleepServiceProps {
 
         if (sleep) { await Sleep.updateOrCreate({ id: sleep.id }, sleepModel) }
         else { await Sleep.create(sleepModel) }
-    }
-
-    async AskSimpleSleep(userId: number, date?: Date): Promise<boolean> {
-        const dateYesterday = DateTime.fromJSDate(date ?? new Date()).minus(86400000)
-        const sleep = await Sleep.query()
-            .where("date", dateYesterday.toJSDate())
-            .andWhere("user_id", userId)
-            .first()
-
-        if (!sleep) return true
-        if (sleep.sleepStart && sleep.sleepEnd) return false
-        else return true
     }
 
     async GetSimpleSleep(userId: number, date?: Date): Promise<GetSimpleSleepProps> {
