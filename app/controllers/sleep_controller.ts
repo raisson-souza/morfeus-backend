@@ -54,7 +54,6 @@ export default class SleepController {
 
             await this.sleepService.Create({
                 userId: auth.user!.id,
-                date: DateTime.fromJSDate(sleep.date),
                 sleepTime: this.calculateSleepTime(sleep.sleepStart, sleep.sleepEnd),
                 sleepStart: DateTime.fromJSDate(sleep.sleepStart),
                 sleepEnd: DateTime.fromJSDate(sleep.sleepEnd),
@@ -77,7 +76,6 @@ export default class SleepController {
             await this.sleepService.Update({
                 userId: auth.user!.id,
                 id: sleep.id,
-                date: DateTime.fromJSDate(sleep.date),
                 sleepTime: this.calculateSleepTime(sleep.sleepStart, sleep.sleepEnd),
                 sleepStart: DateTime.fromJSDate(sleep.sleepStart),
                 sleepEnd: DateTime.fromJSDate(sleep.sleepEnd),
@@ -139,16 +137,16 @@ export default class SleepController {
 
     async createSimpleSleep({ request, response, auth }: HttpContext) {
         try {
-            const { sleepStartYesterday, sleepEndToday, date } = await request.validateUsing(createSimpleSleepValidator)
+            const { sleepStart, sleepEnd } = await request.validateUsing(createSimpleSleepValidator)
 
-            if (!sleepStartYesterday && !sleepEndToday)
+            if (!sleepStart && !sleepEnd)
                 throw new CustomException(400, "Nenhuma informação para criação de sono simples informada.")
 
             await this.sleepService.CreateSimpleSleep({
-                sleepStart: sleepStartYesterday ? DateTime.fromJSDate(sleepStartYesterday) : undefined,
-                sleepEnd: sleepEndToday ? DateTime.fromJSDate(sleepEndToday) : undefined,
-                date: DateTime.fromJSDate(date),
-                userId: auth.user!.id
+                sleepStart: DateTime.fromJSDate(sleepStart),
+                sleepEnd: DateTime.fromJSDate(sleepEnd),
+                userId: auth.user!.id,
+                sleepTime: this.calculateSleepTime(sleepStart, sleepEnd),
             })
             ResponseSender<string>({ response, status: 201, data: "Sono simples criado com sucesso." })
         }

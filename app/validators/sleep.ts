@@ -3,7 +3,6 @@ import vine from '@vinejs/vine'
 /** Valida a criação de um sono */
 export const createSleepValidator = vine.compile(
     vine.object({
-        date: vine.date({ formats: ['YYYY/MM/DD', 'YYYY-MM-DD'] }),
         sleepStart: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] }),
         sleepEnd: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] }),
         wakeUpHumor: vine.object({
@@ -80,7 +79,6 @@ export const createSleepValidator = vine.compile(
 export const updateSleepValidator = vine.compile(
     vine.object({
         id: vine.number(),
-        date: vine.date({ formats: ['YYYY/MM/DD', 'YYYY-MM-DD'] }),
         sleepStart: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] }),
         sleepEnd: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] }),
         wakeUpHumor: vine.object({
@@ -127,9 +125,8 @@ export const updateSleepValidator = vine.compile(
 
 export const createSimpleSleepValidator = vine.compile(
     vine.object({
-        sleepStartYesterday: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] }).optional(),
-        sleepEndToday: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] }).optional(),
-        date: vine.date({ formats: ['YYYY-MM-DD', 'YYYY/MM/DD'] }),
+        sleepStart: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] }),
+        sleepEnd: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] }),
     })
 )
 

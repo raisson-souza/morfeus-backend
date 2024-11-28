@@ -16,15 +16,19 @@ export default class Sleep extends BaseModel {
 
   /** Tempo de sono */
   @column()
-  declare sleepTime: number | null
+  declare sleepTime: number
 
   /** Inicio do sono */
   @column.dateTime()
-  declare sleepStart: DateTime | null
+  declare sleepStart: DateTime
 
   /** Fim do sono */
   @column.dateTime()
-  declare sleepEnd: DateTime | null
+  declare sleepEnd: DateTime
+
+  /** O sonho ocorreu durante a noite */
+  @column()
+  declare isNightSleep: boolean
 
   /** Humor ao acordar */
   @column()

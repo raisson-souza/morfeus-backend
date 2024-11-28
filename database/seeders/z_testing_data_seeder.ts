@@ -22,7 +22,7 @@ export default class extends BaseSeeder {
      * esse trecho de código pode ser comentado.
      */
     // Inicializada data para o 1° dia do mês atual
-    const dateNow = DateTime.now().minus({ seconds: ((DateTime.now().day - 1) * 86400) })
+    const dateNow = DateTime.now().set({ day: 1 })
 
     await User.create({
       fullName: 'Administrador',
@@ -32,14 +32,15 @@ export default class extends BaseSeeder {
 
     for (let i = 0; i < 5; i++) {
       // Avanço de um dia por sono
-      const newDate = dateNow.plus({ seconds: (86400 * i) })
+      const newDate = dateNow.plus({ days: 1 * i })
       await Sleep.create({
         userId: 1,
         date: newDate,
         sleepTime: 6,
         sleepStart: newDate,
         // Data final do sono é 6 horas após a inicial
-        sleepEnd: newDate.plus({ seconds: (3600 * 6) }),
+        sleepEnd: newDate.plus({ seconds: 6 }),
+        isNightSleep: true,
         wakeUpHumor: {
           undefinedHumor: (i % 2 === 0) && (i === 0),
           calm: (i % 2 === 0) && (i === 0),

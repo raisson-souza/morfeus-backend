@@ -1,7 +1,8 @@
-import { CreateSimpleSleepProps, GetSimpleSleepProps, ListSleepsByUserProps, SleepCreationInput, SleepInput, sleepInputModel, SleepOutput } from "../types/sleepTypes.js"
+import { CreateSimpleSleepProps, GetSimpleSleepProps, ListSleepsByUserProps, SleepCreationInput, SleepInput, sleepInputModel, SleepOutput, SleepUpdateProps } from "../types/sleepTypes.js"
 import { DateTime } from "luxon"
 import { DreamTagInput } from "../types/DreamTagTypes.js"
 import { Pagination } from "../types/pagiation.js"
+import { SleepHumorType } from "../types/sleepHumor.js"
 import { TagInput } from "../types/TagTypes.js"
 import { TransactionClientContract } from "@adonisjs/lucid/types/database"
 import CustomException from "#exceptions/custom_exception"
@@ -14,22 +15,27 @@ import Tag from "#models/tag"
 import User from "#models/user"
 
 export default class SleepService implements SleepServiceProps {
-    async Create(sleep: SleepCreationInput, validate = true) : Promise<Sleep> {
+    async Create(sleep: SleepCreationInput, _ = true) : Promise<Sleep> {
         const userExists = await User.find(sleep.userId)
         if (!userExists) throw new CustomException(404, "Usuário inexistente para a criação do sono.")
 
         if (sleep.dreams.length > 3) throw new CustomException(400, "Apenas 3 sonhos podem ser cadastrados durante o cadastro de um sono.")
 
         return await db.transaction(async (trx) => {
-            if (validate) await this.Validate(sleep)
-            this.ValidateSleepHumor(sleep)
-            this.ValidateSleepTime(sleep.sleepTime ?? 0)
+            this.ValidateSleepTime(sleep.sleepTime)
+            this.ValidateSleepPeriod(sleep.sleepStart, sleep.sleepEnd)
+            this.ValidateSleepHumor(sleep.wakeUpHumor, sleep.layDownHumor)
+            const isNightSleep = this.IsNightSleep(sleep.sleepStart, sleep.sleepEnd)
+            const sleepDate = this.DefineSleepDate(sleep.sleepEnd, isNightSleep)
+            await this.ValidateSleepCreation(sleep.userId, sleepDate, sleep.sleepStart, sleep.sleepEnd)
+
             const sleepModel: SleepInput = {
                 userId: sleep.userId,
-                date: sleep.date,
+                date: sleepDate,
                 sleepTime: sleep.sleepTime,
                 sleepStart: sleep.sleepStart,
                 sleepEnd: sleep.sleepEnd,
+                isNightSleep: isNightSleep,
                 wakeUpHumor: sleep.wakeUpHumor,
                 layDownHumor: sleep.layDownHumor,
                 biologicalOccurences: sleep.biologicalOccurences,
@@ -55,48 +61,67 @@ export default class SleepService implements SleepServiceProps {
         })
     }
 
-    async Update(sleep: SleepOutput, _ = false) : Promise<Sleep> {
+    async Update(sleep: SleepUpdateProps, _ = false) : Promise<Sleep> {
         const foundUser = await this.Get(sleep.id)
         if (!foundUser) throw new CustomException(404, "Sono não encontrado.")
 
+        this.ValidateSleepTime(sleep.sleepTime)
+        this.ValidateSleepPeriod(sleep.sleepStart, sleep.sleepEnd)
+        this.ValidateSleepHumor(sleep.wakeUpHumor, sleep.layDownHumor)
+        const isNightSleep = this.IsNightSleep(sleep.sleepStart, sleep.sleepEnd)
+        const sleepDate = this.DefineSleepDate(sleep.sleepEnd, isNightSleep)
+        await this.ValidateSleepUpdate(sleep.userId, sleepDate, sleep.id, sleep.sleepStart, sleep.sleepEnd)
+
+        const sleepModel: SleepOutput = {
+            id: sleep.id,
+            userId: sleep.userId,
+            date: sleepDate,
+            sleepTime: sleep.sleepTime,
+            sleepStart: sleep.sleepStart,
+            sleepEnd: sleep.sleepEnd,
+            isNightSleep: isNightSleep,
+            wakeUpHumor: sleep.wakeUpHumor,
+            layDownHumor: sleep.layDownHumor,
+            biologicalOccurences: sleep.biologicalOccurences,
+        }
+
         return await db.transaction(async (trx) => {
-            this.ValidateSleepHumor(sleep)
-            this.ValidateSleepTime(sleep.sleepTime ?? 0)
-            return await Sleep.updateOrCreate({ id: sleep.id }, sleep, { client: trx })
+            return await Sleep.updateOrCreate({ id: sleep.id }, sleepModel, { client: trx })
         })
     }
 
-    async Validate(sleep: SleepInput): Promise<void> {
-        const sameDateSleep = await Sleep.findBy('date', sleep.date)
-        if (sameDateSleep) throw new CustomException(400, "Sono de mesma data já cadastrado.")
+    async Validate(_: SleepCreationInput): Promise<void> {
+        // Regra de negócio removida devido a nova regra de sono noturno e diurno
+        // const sameDateSleep = await Sleep.findBy('date', sleep.date)
+        // if (sameDateSleep) throw new CustomException(400, "Sono de mesma data já cadastrado.")
     }
 
-    private ValidateSleepHumor(sleep: SleepInput) {
+    private ValidateSleepHumor(wakeUpHumor: SleepHumorType, layDownHumor: SleepHumorType) {
         if (
-            (sleep.wakeUpHumor.undefinedHumor && sleep.wakeUpHumor.other) ||
-            (sleep.layDownHumor.undefinedHumor && sleep.layDownHumor.other) ||
+            (wakeUpHumor.undefinedHumor && wakeUpHumor.other) ||
+            (layDownHumor.undefinedHumor && layDownHumor.other) ||
             (
-                (sleep.wakeUpHumor.undefinedHumor || sleep.wakeUpHumor.other) &&
+                (wakeUpHumor.undefinedHumor || wakeUpHumor.other) &&
                 (
-                    sleep.wakeUpHumor.calm ||
-                    sleep.wakeUpHumor.drowsiness ||
-                    sleep.wakeUpHumor.tiredness ||
-                    sleep.wakeUpHumor.anxiety ||
-                    sleep.wakeUpHumor.happiness ||
-                    sleep.wakeUpHumor.fear ||
-                    sleep.wakeUpHumor.sadness
+                    wakeUpHumor.calm ||
+                    wakeUpHumor.drowsiness ||
+                    wakeUpHumor.tiredness ||
+                    wakeUpHumor.anxiety ||
+                    wakeUpHumor.happiness ||
+                    wakeUpHumor.fear ||
+                    wakeUpHumor.sadness
                 )
             ) ||
             (
-                (sleep.layDownHumor.undefinedHumor || sleep.layDownHumor.other) &&
+                (layDownHumor.undefinedHumor || layDownHumor.other) &&
                 (
-                    sleep.layDownHumor.calm ||
-                    sleep.layDownHumor.drowsiness ||
-                    sleep.layDownHumor.tiredness ||
-                    sleep.layDownHumor.anxiety ||
-                    sleep.layDownHumor.happiness ||
-                    sleep.layDownHumor.fear ||
-                    sleep.layDownHumor.sadness
+                    layDownHumor.calm ||
+                    layDownHumor.drowsiness ||
+                    layDownHumor.tiredness ||
+                    layDownHumor.anxiety ||
+                    layDownHumor.happiness ||
+                    layDownHumor.fear ||
+                    layDownHumor.sadness
                 )
             )
         ) throw new CustomException(400, "Humor ao acordar ou ao dormir inválido.")
@@ -104,6 +129,125 @@ export default class SleepService implements SleepServiceProps {
 
     private ValidateSleepTime(sleepTime: number): void {
         if (sleepTime > 24) throw new CustomException(400, "Tempo de sono inválido.")
+    }
+
+    private ValidateSleepPeriod(sleepStart: DateTime<boolean>, sleepEnd: DateTime<boolean>) {
+        if (sleepStart.toMillis() > sleepEnd.toMillis())
+            throw new CustomException(400, "O horário de dormir não pode ser depois de acordar.")
+    }
+
+    private IsNightSleep(sleepStart: DateTime<boolean>, sleepEnd: DateTime<boolean>): boolean {
+        let isNightSleep = false
+        const isSameDay = sleepStart.day === sleepEnd.day
+        if (isSameDay) {
+            if (sleepStart.hour >= 0 && sleepEnd.hour <= 12) {
+                // Periodo da madrugada e matutino
+                isNightSleep = true
+            }
+        }
+        else {
+            isNightSleep = true
+        }
+        return isNightSleep
+    }
+
+    private DefineSleepDate(sleepEnd: DateTime<boolean>, isNightSleep: boolean): DateTime<boolean> {
+        return isNightSleep
+            ? sleepEnd.minus({ day: 1 })
+            : sleepEnd
+    }
+
+    private async ValidateSleepCreation(userId: number, sleepDate: DateTime<boolean>, sleepStart: DateTime<boolean>, sleepEnd: DateTime<boolean>) {
+        const now = DateTime.now()
+        if (
+            sleepEnd.day > now.day ||
+            (sleepEnd.day === now.day && sleepEnd.hour > now.hour)
+        )
+            throw new CustomException(400, "Não é possível cadastrar um sono futuro.")
+        const samePeriodSleeps = await this.GetConflictingSleepIntervals(userId, sleepDate, sleepStart, sleepEnd)
+        if (samePeriodSleeps.length > 0)
+            throw new CustomException(400, "Sono de mesmo período já cadastrado.")
+    }
+
+    private async ValidateSleepUpdate(userId: number, sleepDate: DateTime<boolean>,sleepId: number, sleepStart: DateTime<boolean>, sleepEnd: DateTime<boolean>) {
+        const now = DateTime.now()
+        if (
+            sleepEnd.day > now.day ||
+            (sleepEnd.day === now.day && sleepEnd.hour > now.hour)
+        )
+            throw new CustomException(400, "Não é possível cadastrar um sono futuro.")
+        const samePeriodSleeps = await this.GetConflictingSleepIntervals(userId, sleepDate, sleepStart, sleepEnd)
+        const sleepToUpdate = samePeriodSleeps.find(sleep => { return sleep.id === sleepId })
+        if (!sleepToUpdate)
+            throw new CustomException(400, "Sono de mesmo período já cadastrado.")
+    }
+
+    private async ValidateSimpleSleepCreation(userId: number, sleepDate: DateTime<boolean>, sleepStart: DateTime<boolean>, sleepEnd: DateTime<boolean>): Promise<number | null> {
+        const sameSleepPeriods = await this.GetConflictingSleepIntervals(userId, sleepDate, sleepStart, sleepEnd)
+
+        if (sameSleepPeriods.length === 1) {
+            return sameSleepPeriods[0].id
+        }
+        else if (sameSleepPeriods.length === 0) {
+            return null
+        }
+        else {
+            throw new CustomException(400, "Sono de mesmo período já cadastrado.")
+        }
+    }
+
+    private async GetConflictingSleepIntervals(userId: number, newSleepDate: DateTime<boolean>, newSleepStart: DateTime<boolean>, newSleepEnd: DateTime<boolean>) {
+        const yesterday = newSleepDate.minus({ day: 1 })
+        const tomorrow = newSleepDate.plus({ day: 1 })
+
+        const sameDateSleeps = await Sleep.query()
+            .where("user_id", userId)
+            .andWhereRaw(`EXTRACT(YEAR FROM sleeps.date) = ${ newSleepDate.year }`)
+            .andWhereRaw(`EXTRACT(MONTH FROM sleeps.date) = ${ newSleepDate.month }`)
+            .andWhere(query => {
+                query
+                    .whereRaw(`EXTRACT(DAY FROM sleeps.date) = ${ newSleepDate.day }`)
+                    .orWhereRaw(`EXTRACT(DAY FROM sleeps.date) = ${ yesterday.day }`)
+                    .orWhereRaw(`EXTRACT(DAY FROM sleeps.date) = ${ tomorrow.day }`)
+            })
+
+        const sleepPeriodsConflicts: Sleep[] = []
+
+        sameDateSleeps.map(sameDateSleep => {
+            const dbSleepStartEpoch = sameDateSleep.sleepStart.toMillis()
+            const dbSleepEndEpoch = sameDateSleep.sleepEnd.toMillis()
+            const sleepStartEpoch = newSleepStart.toMillis()
+            const sleepEndEpoch = newSleepEnd.toMillis()
+
+            if (
+                // o novo sono inicia antes do inicio sono e termina antes do fim
+                (
+                    dbSleepStartEpoch >= sleepStartEpoch &&
+                    dbSleepStartEpoch <= sleepEndEpoch &&
+                    dbSleepEndEpoch >= sleepEndEpoch
+                ) ||
+                // o novo sono inicia após o inicio do sono e termina antes do fim
+                (
+                    dbSleepStartEpoch >= sleepStartEpoch &&
+                    dbSleepEndEpoch <= sleepEndEpoch
+                ) ||
+                // o novo sono inicia antes do inicio do sono e termina após o fim
+                (
+                    dbSleepStartEpoch <= sleepStartEpoch &&
+                    dbSleepEndEpoch >= sleepEndEpoch
+                ) ||
+                // o novo sono inicia após o inicio do sono e termina após o fim
+                (
+                    dbSleepStartEpoch <= sleepStartEpoch &&
+                    dbSleepEndEpoch >= sleepStartEpoch &&
+                    dbSleepEndEpoch <= sleepEndEpoch
+                )
+            ) {
+                sleepPeriodsConflicts.push(sameDateSleep)
+            }
+        })
+
+        return sleepPeriodsConflicts
     }
 
     async Get(id: number) {
@@ -172,40 +316,35 @@ export default class SleepService implements SleepServiceProps {
         const {
             sleepStart,
             sleepEnd,
-            date,
-            userId
+            userId,
+            sleepTime,
         } = simpleSleep
 
-        let sleepTime: number | undefined = undefined
-        const dateYesterday = date.minus(86400000)
-        const sleep = await Sleep.findBy("date", dateYesterday.toJSDate())
-
-        if (sleepStart && sleepEnd) {
-            if (sleepStart > sleepEnd)
-                throw new CustomException(400, "O horário de acordar não pode ser anterior ao horário de dormir.")
-            sleepTime = sleepEnd.diff(sleepStart, "hours").hours
-        }
-        else if (sleepStart && sleep) {
-            if (sleep.sleepEnd) sleepTime = sleep.sleepEnd.diff(sleepStart, "hours").hours
-        }
-        else if (sleepEnd && sleep) {
-            if (sleep.sleepStart) sleepTime = sleepEnd.diff(sleep.sleepStart, "hours").hours
-        }
-        else sleepTime = 0
-
-        this.ValidateSleepTime(sleepTime ?? 0)
+        this.ValidateSleepTime(sleepTime)
+        this.ValidateSleepPeriod(sleepStart, sleepEnd)
+        const isNightSleep = this.IsNightSleep(sleepStart, sleepEnd)
+        const sleepDate = this.DefineSleepDate(sleepEnd, isNightSleep)
 
         const sleepModel: SleepInput = {
             ...sleepInputModel,
+            userId: userId,
+            date: sleepDate,
+            sleepTime: sleepTime,
             sleepStart: sleepStart,
             sleepEnd: sleepEnd,
-            sleepTime: Number.parseFloat(sleepTime!.toPrecision(2)),
-            userId: userId,
-            date: dateYesterday,
+            isNightSleep: isNightSleep,
         }
 
-        if (sleep) { await Sleep.updateOrCreate({ id: sleep.id }, sleepModel) }
-        else { await Sleep.create(sleepModel) }
+        const sameSleepPeriodId = await this.ValidateSimpleSleepCreation(userId, sleepDate, sleepStart, sleepEnd)
+
+        if (sameSleepPeriodId) {
+            await this.ValidateSleepUpdate(userId, sleepDate, sameSleepPeriodId, sleepStart, sleepEnd)
+            await Sleep.updateOrCreate({ id: sameSleepPeriodId }, sleepModel)
+        }
+        else {
+            await this.ValidateSleepCreation(userId, sleepDate, sleepStart, sleepEnd)
+            await Sleep.create(sleepModel)
+        }
     }
 
     async GetSimpleSleep(userId: number, date?: Date): Promise<GetSimpleSleepProps> {
