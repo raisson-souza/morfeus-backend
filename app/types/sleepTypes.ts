@@ -46,12 +46,14 @@ export type SleepUpdateProps = {
 
 export type CreateSimpleSleepProps = {
     userId: number
+    sleepId?: number
     sleepStart: DateTime
     sleepEnd: DateTime
     sleepTime: number
 }
 
 export type GetSimpleSleepProps = {
+    sleepId: number | null
     sleepStart: DateTime | null
     sleepEnd: DateTime | null
 }

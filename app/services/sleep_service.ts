@@ -182,20 +182,6 @@ export default class SleepService implements SleepServiceProps {
             throw new CustomException(400, "Sono de mesmo período já cadastrado.")
     }
 
-    private async ValidateSimpleSleepCreation(userId: number, sleepDate: DateTime<boolean>, sleepStart: DateTime<boolean>, sleepEnd: DateTime<boolean>): Promise<number | null> {
-        const sameSleepPeriods = await this.GetConflictingSleepIntervals(userId, sleepDate, sleepStart, sleepEnd)
-
-        if (sameSleepPeriods.length === 1) {
-            return sameSleepPeriods[0].id
-        }
-        else if (sameSleepPeriods.length === 0) {
-            return null
-        }
-        else {
-            throw new CustomException(400, "Sono de mesmo período já cadastrado.")
-        }
-    }
-
     private async GetConflictingSleepIntervals(userId: number, newSleepDate: DateTime<boolean>, newSleepStart: DateTime<boolean>, newSleepEnd: DateTime<boolean>) {
         const yesterday = newSleepDate.minus({ day: 1 })
         const tomorrow = newSleepDate.plus({ day: 1 })
@@ -318,6 +304,7 @@ export default class SleepService implements SleepServiceProps {
             sleepEnd,
             userId,
             sleepTime,
+            sleepId,
         } = simpleSleep
 
         this.ValidateSleepTime(sleepTime)
@@ -335,11 +322,17 @@ export default class SleepService implements SleepServiceProps {
             isNightSleep: isNightSleep,
         }
 
-        const sameSleepPeriodId = await this.ValidateSimpleSleepCreation(userId, sleepDate, sleepStart, sleepEnd)
+        let isEditing = false
 
-        if (sameSleepPeriodId) {
-            await this.ValidateSleepUpdate(userId, sleepDate, sameSleepPeriodId, sleepStart, sleepEnd)
-            await Sleep.updateOrCreate({ id: sameSleepPeriodId }, sleepModel)
+        if (sleepId != undefined) {
+            if (await Sleep.find(sleepId)) {
+                isEditing = true
+            }
+        }
+
+        if (isEditing) {
+            await this.ValidateSleepUpdate(userId, sleepDate, sleepId!, sleepStart, sleepEnd)
+            await Sleep.updateOrCreate({ id: sleepId! }, sleepModel)
         }
         else {
             await this.ValidateSleepCreation(userId, sleepDate, sleepStart, sleepEnd)
@@ -347,18 +340,18 @@ export default class SleepService implements SleepServiceProps {
         }
     }
 
-    async GetSimpleSleep(userId: number, date?: Date): Promise<GetSimpleSleepProps> {
-        const dateYesterday = DateTime.fromJSDate(date ?? new Date()).minus(86400000)
-        const sleep = await Sleep.query()
-            .where("date", dateYesterday.toJSDate())
+    async GetSimpleSleep(userId: number): Promise<GetSimpleSleepProps> {
+        const lastSleep = await Sleep.query()
             .andWhere("user_id", userId)
+            .orderBy("id", "desc")
             .first()
 
-        if (!sleep) throw new CustomException(404, "Sono simples não encontrado.")
+        if (!lastSleep) throw new CustomException(404, "Sono simples não encontrado.")
 
         return {
-            sleepEnd: sleep.sleepEnd,
-            sleepStart: sleep.sleepStart,
+            sleepEnd: lastSleep.sleepEnd,
+            sleepStart: lastSleep.sleepStart,
+            sleepId: lastSleep.id,
         }
     }
 

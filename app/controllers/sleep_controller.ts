@@ -137,7 +137,7 @@ export default class SleepController {
 
     async createSimpleSleep({ request, response, auth }: HttpContext) {
         try {
-            const { sleepStart, sleepEnd } = await request.validateUsing(createSimpleSleepValidator)
+            const { sleepStart, sleepEnd, sleepId } = await request.validateUsing(createSimpleSleepValidator)
 
             if (!sleepStart && !sleepEnd)
                 throw new CustomException(400, "Nenhuma informação para criação de sono simples informada.")
@@ -147,6 +147,7 @@ export default class SleepController {
                 sleepEnd: DateTime.fromJSDate(sleepEnd),
                 userId: auth.user!.id,
                 sleepTime: this.calculateSleepTime(sleepStart, sleepEnd),
+                sleepId: sleepId,
             })
             ResponseSender<string>({ response, status: 201, data: "Sono simples criado com sucesso." })
         }
