@@ -26,8 +26,6 @@ export type DreamOutput = {
 
 // TIPOS PERSONALIZADOS
 
-// TODO: Verificar tipos usados
-
 export type CreateDreamModel = {
     sleepId?: number
     title: string
@@ -65,17 +63,6 @@ export type DreamNoSleepTimeKnown = {
     sleepStart: DateTime
     sleepEnd: DateTime
 }
-
-/** Tipo de sonho para criação de sonho completo */
-type BaseDreamCompleteInput = {
-    date?: DateTime
-    userId?: number
-} & DreamInput
-
-/** Tipo de sonho com tags (apenas título) */
-export type DreamCompleteInput = {
-    tags: string[]
-} & BaseDreamCompleteInput
 
 /** Tipo de sonho com tags (apenas título) para atualização de sonho */
 export type DreamCompleteUpdateInput = {
