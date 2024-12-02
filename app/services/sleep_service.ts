@@ -136,7 +136,7 @@ export default class SleepService implements SleepServiceProps {
             throw new CustomException(400, "O horário de dormir não pode ser depois de acordar.")
     }
 
-    private IsNightSleep(sleepStart: DateTime<boolean>, sleepEnd: DateTime<boolean>): boolean {
+    IsNightSleep(sleepStart: DateTime<boolean>, sleepEnd: DateTime<boolean>): boolean {
         let isNightSleep = false
         const isSameDay = sleepStart.day === sleepEnd.day
         if (isSameDay) {
@@ -151,18 +151,15 @@ export default class SleepService implements SleepServiceProps {
         return isNightSleep
     }
 
-    private DefineSleepDate(sleepEnd: DateTime<boolean>, isNightSleep: boolean): DateTime<boolean> {
+    DefineSleepDate(sleepEnd: DateTime<boolean>, isNightSleep: boolean): DateTime<boolean> {
         return isNightSleep
             ? sleepEnd.minus({ day: 1 })
             : sleepEnd
     }
 
-    private async ValidateSleepCreation(userId: number, sleepDate: DateTime<boolean>, sleepStart: DateTime<boolean>, sleepEnd: DateTime<boolean>) {
+    async ValidateSleepCreation(userId: number, sleepDate: DateTime<boolean>, sleepStart: DateTime<boolean>, sleepEnd: DateTime<boolean>) {
         const now = DateTime.now()
-        if (
-            sleepEnd.day > now.day ||
-            (sleepEnd.day === now.day && sleepEnd.hour > now.hour)
-        )
+        if (sleepEnd.toMillis() > now.toMillis())
             throw new CustomException(400, "Não é possível cadastrar um sono futuro.")
         const samePeriodSleeps = await this.GetConflictingSleepIntervals(userId, sleepDate, sleepStart, sleepEnd)
         if (samePeriodSleeps.length > 0)
@@ -171,10 +168,7 @@ export default class SleepService implements SleepServiceProps {
 
     private async ValidateSleepUpdate(userId: number, sleepDate: DateTime<boolean>,sleepId: number, sleepStart: DateTime<boolean>, sleepEnd: DateTime<boolean>) {
         const now = DateTime.now()
-        if (
-            sleepEnd.day > now.day ||
-            (sleepEnd.day === now.day && sleepEnd.hour > now.hour)
-        )
+        if (sleepEnd.toMillis() > now.toMillis())
             throw new CustomException(400, "Não é possível cadastrar um sono futuro.")
         const samePeriodSleeps = await this.GetConflictingSleepIntervals(userId, sleepDate, sleepStart, sleepEnd)
         const sleepToUpdate = samePeriodSleeps.find(sleep => { return sleep.id === sleepId })
@@ -199,6 +193,7 @@ export default class SleepService implements SleepServiceProps {
 
         const sleepPeriodsConflicts: Sleep[] = []
 
+        // TODO: Criar método público para verificar conflito em períodos de sono e utilizar nos métodos na DreamService
         sameDateSleeps.map(sameDateSleep => {
             const dbSleepStartEpoch = sameDateSleep.sleepStart.toMillis()
             const dbSleepEndEpoch = sameDateSleep.sleepEnd.toMillis()

@@ -1,5 +1,5 @@
+import { CreateDreamModel, DreamCompleteUpdateInput, DreamInput, DreamListedByUser, DreamNoSleepDateKnown, DreamNoSleepTimeKnown, DreamNoSleepTimePeriod, DreamWithTags, ListDreamsByUser } from "../types/dreamTypes.js"
 import { DateTime } from "luxon"
-import { DreamCompleteInput, DreamCompleteUpdateInput, DreamInput, DreamListedByUser, DreamUncompleteInput, DreamWithTags, ListDreamsByUser } from "../types/dreamTypes.js"
 import { DreamTagInput } from "../types/DreamTagTypes.js"
 import { inject } from "@adonisjs/core"
 import { ModelPaginatorContract } from "@adonisjs/lucid/types/model"
@@ -25,10 +25,10 @@ export default class DreamService implements DreamServiceProps {
         protected tagService: TagService,
     ) { }
 
-    async Create(dream: DreamCompleteInput, validate = true) : Promise<Dream> {
+    async Create(dream: CreateDreamModel, _ = true) : Promise<Dream> {
         let newDream: Dream | null = null
         const dreamModel: DreamInput = {
-            sleepId: dream.sleepId,
+            sleepId: dream.sleepId ?? 0,
             title: dream.title,
             description: dream.description,
             dreamPointOfViewId: dream.dreamPointOfViewId,
@@ -46,41 +46,32 @@ export default class DreamService implements DreamServiceProps {
         }
 
         await db.transaction(async (trx) => {
-            // Caso o sono exista, não necessita criar um provisório
             if (dream.sleepId) {
                 const sleepExists = await Sleep.find(dream.sleepId)
-                if (!sleepExists) throw new CustomException(404, "Sono referente não encontrado.")
+                if (!sleepExists)
+                    throw new CustomException(404, "Sono referente não encontrado.")
 
-                if (validate) await this.Validate(dream)
+                await this.Validate(dream)
                 newDream = await Dream.create(dreamModel, { client: trx })
                 await this.CreateTags(dream.tags, newDream!.id, trx)
             } else {
-                // Verifica a existência do usuário para a criação do sono
+                if (!dream.dreamNoSleepDateKnown && !dream.dreamNoSleepTimeKnown)
+                    throw new CustomException(400, "Não é possível criar um sonho sem informações necessárias sobre o sono referente.")
+
                 const userExists = await User.find(dream.userId)
-                if (!userExists) throw new CustomException(404, "Usuário referente ao sono a ser criado não encontrado.")
+                if (!userExists)
+                    throw new CustomException(404, "Usuário referente ao sono a ser criado não encontrado.")
 
-                // Monta o objeto de criação de um sono
-                const createSleepModel: SleepInput = {
-                    ...sleepInputModel,
-                    userId: dream.userId ?? 0,
-                    date: dream.date ?? DateTime.now(),
-                }
-                // Se o sono não existe, criamos, se existe, encontramos pela data
-                const sleepExists = await this.ValidateSleepCreation(createSleepModel)
-                if (!sleepExists) {
-                    const sleepCreated = await Sleep.create(createSleepModel, { client: trx })
-                    dreamModel.sleepId = sleepCreated.id
-                }
-                else {
-                    await Sleep.findBy("date", createSleepModel.date)
-                        .then(sleep => {
-                            if (sleep) dreamModel.sleepId = sleep.id
-                        })
-                }
+                // TODO: caso horário conhecido, necessita entregar a data?
+                dreamModel.sleepId = await this.DefineSleepIdForDreamNoSleep(
+                    dream.userId,
+                    dream.dreamNoSleepTimeKnown,
+                    dream.dreamNoSleepDateKnown,
+                    trx
+                )
 
-                // No caso da criação do sonho sem sono pré-criado, iniciamos uma transação aninhada para lidar com o sonho e as tags
                 await trx.transaction(async (childTrx) => {
-                    if (validate) await this.Validate(dream)
+                    this.Validate(dream)
                     newDream = await Dream.create(dreamModel, { client: childTrx })
                     await this.CreateTags(dream.tags, newDream!.id, childTrx)
                 })
@@ -89,51 +80,61 @@ export default class DreamService implements DreamServiceProps {
         return newDream!
     }
 
-    async CreateUncomplete(dream: DreamUncompleteInput, validate = true) : Promise<Dream> {
-        return await db.transaction(async (trx) => {
-            const userExists = await User.find(dream.userId, { client: trx })
-            if (!userExists) throw new CustomException(404, "Usuário referente ao sono a ser criado não encontrado.")
+    // async CreateUncomplete(dream: CreateDreamModel, _ = true) : Promise<Dream> {
+    //     return await db.transaction(async (trx) => {
+    //         let newDream: Dream | null = null
 
-            const sleepExists = await Sleep.findBy('date', dream.date)
-            let sleepId: number | null = null
+    //         const dreamModel: DreamInput = {
+    //             sleepId: dream.sleepId ?? 0,
+    //             title: dream.title,
+    //             description: dream.description,
+    //             dreamPointOfViewId: dream.dreamPointOfViewId,
+    //             climate: dream.climate,
+    //             dreamHourId: dream.dreamHourId,
+    //             dreamDurationId: dream.dreamDurationId,
+    //             dreamLucidityLevelId: dream.dreamLucidityLevelId,
+    //             dreamTypeId: dream.dreamTypeId,
+    //             dreamRealityLevelId: dream.dreamRealityLevelId,
+    //             eroticDream: dream.eroticDream,
+    //             hiddenDream: dream.hiddenDream,
+    //             personalAnalysis: dream.personalAnalysis,
+    //             dreamOriginId: dream.dreamOriginId,
+    //             isComplete: true,
+    //         }
 
-            // Se o sono não existe, é criado
-            if (!sleepExists) {
-                const createSleepModel: SleepInput = {
-                    ...sleepInputModel,
-                    userId: dream.userId ?? 0,
-                    date: dream.date ?? DateTime.now(),
-                }
-                // Aqui não será aproveitado intuito do método ValidateSleepCreation pois buscamos o
-                // sonho pela data em sleepExists acima e já sabemos se existe antes que passe por aqui
-                await this.ValidateSleepCreation(createSleepModel)
-                await Sleep.create(createSleepModel, { client: trx })
-                    .then(sleep => { sleepId = sleep.id })
-            } else {
-                sleepId = sleepExists.id
-            }
+    //         if (dream.sleepId) {
+    //             const sleepExists = await Sleep.find(dream.sleepId)
+    //             if (!sleepExists)
+    //                 throw new CustomException(404, "Sono referente não encontrado.")
 
-            if (validate) await this.Validate(dream)
-            const createDreamModel: DreamInput = {
-                sleepId: sleepId!,
-                title: dream.title,
-                description: dream.description,
-                dreamPointOfViewId: dream.dreamPointOfViewId,
-                climate: dream.climate,
-                dreamHourId: dream.dreamHourId,
-                dreamDurationId: dream.dreamDurationId,
-                dreamLucidityLevelId: dream.dreamLucidityLevelId,
-                dreamTypeId: dream.dreamTypeId,
-                dreamRealityLevelId: dream.dreamRealityLevelId,
-                eroticDream: dream.eroticDream,
-                hiddenDream: dream.hiddenDream,
-                personalAnalysis: dream.personalAnalysis,
-                dreamOriginId: dream.dreamOriginId,
-                isComplete: false,
-            }
-            return await Dream.create(createDreamModel, { client: trx })
-        })
-    }
+    //             await this.Validate(dream)
+    //             newDream = await Dream.create(dreamModel, { client: trx })
+    //             await this.CreateTags(dream.tags, newDream!.id, trx)
+    //         } else {
+    //             if (!dream.dreamNoSleepDateKnown && !dream.dreamNoSleepTimeKnown)
+    //                 throw new CustomException(400, "Não é possível criar um sonho sem informações necessárias sobre o sono referente.")
+
+    //             const userExists = await User.find(dream.userId)
+    //             if (!userExists)
+    //                 throw new CustomException(404, "Usuário referente ao sono a ser criado não encontrado.")
+
+    //             dreamModel.sleepId = await this.DefineSleepIdForDreamNoSleep(
+    //                 dream.userId,
+    //                 dream.dreamNoSleepTimeKnown,
+    //                 dream.dreamNoSleepDateKnown,
+    //                 trx
+    //             )
+
+    //             await trx.transaction(async (childTrx) => {
+    //                 this.Validate(dream)
+    //                 newDream = await Dream.create(dreamModel, { client: childTrx })
+    //                 await this.CreateTags(dream.tags, newDream!.id, childTrx)
+    //             })
+    //         }
+
+    //         return newDream!
+    //     })
+    // }
 
     async Update(dream: DreamCompleteUpdateInput, _ = true): Promise<Dream> {
         const sleepExists = await Sleep.find(dream.sleepId)
@@ -174,7 +175,7 @@ export default class DreamService implements DreamServiceProps {
         })
     }
 
-    async Validate(dream: DreamInput): Promise<void> {
+    async Validate(dream: CreateDreamModel): Promise<void> {
         const sameTitleDreamExists = await Dream.findBy('title', dream.title)
         if (sameTitleDreamExists) throw new CustomException(400, "Um sonho com o mesmo título já existe.")
     }
@@ -445,19 +446,167 @@ export default class DreamService implements DreamServiceProps {
         return dreams
     }
 
-    /**
-     * Releva a excessão de sono de mesma data já criado do validador sono para a viabilidade de anexação de sonhos novos a sonos já criados ou não
-     * @returns {Promise<boolean>} TRUE se existe sono com mesma data | FALSE se não existe sono com mesma data
-     * */
-    private async ValidateSleepCreation(sleep: SleepInput): Promise<boolean> {
-        try {
-            await this.sleepService.Validate(sleep)
-            return false
+    // TODO: Explicitar retorno dos métodos e simplificar parametros
+    private async DefineSleepIdForDreamNoSleep(userId: number, timeKnown: DreamNoSleepTimeKnown | null, dateKnown: DreamNoSleepDateKnown | null, trx: TransactionClientContract): Promise<number> {
+        let sleepId: number | null = null
+        let sleepStart: DateTime<boolean> | null = null
+        let sleepEnd: DateTime<boolean> | null = null
+
+        if (timeKnown) {
+            sleepStart = timeKnown.sleepStart
+            sleepEnd = timeKnown.sleepEnd
+            sleepId = await this.GetSleepForDreamNoSleepByTimeKnown(
+                userId,
+                timeKnown.date,
+                timeKnown.sleepStart,
+                timeKnown.sleepEnd
+            )
+        } else {
+            const sleepPeriodTimes = this.DefineSleepPeriodTimes(dateKnown!.date, dateKnown!.period)
+            sleepStart = sleepPeriodTimes.sleepStart
+            sleepEnd = sleepPeriodTimes.sleepEnd
+            sleepId = await this.GetSleepForDreamNoSleepByDateKnown(
+                userId,
+                dateKnown!.date,
+                dateKnown!.period,
+            )
         }
-        catch (ex) {
-            if (ex.message != "Sono de mesma data já cadastrado.")
-                throw new CustomException(ex.status, ex.message)
-            return true
+
+        if (sleepId) {
+            return sleepId
         }
+        else {
+            const newSleep = await this.CreateSleepForDreamNoSleep(userId, sleepStart, sleepEnd, trx)
+            return newSleep.id
+        }
+    }
+
+    // TODO: Explicitar retorno dos métodos e simplificar parametros
+    private async CreateSleepForDreamNoSleep(userId: number, sleepStart: DateTime<true>, sleepEnd: DateTime<true>, trx: TransactionClientContract): Promise<Sleep> {
+        const isNightSleep = this.sleepService.IsNightSleep(sleepStart, sleepEnd)
+        const sleepDate = this.sleepService.DefineSleepDate(sleepEnd, isNightSleep)
+        await this.sleepService.ValidateSleepCreation(userId, sleepDate, sleepStart, sleepEnd)
+
+        const sleepModel: SleepInput = {
+            ...sleepInputModel,
+            userId: userId,
+            date: sleepDate,
+            sleepTime: 0,
+            sleepStart: sleepStart,
+            sleepEnd: sleepEnd,
+            isNightSleep: isNightSleep,
+        }
+
+        return await Sleep.create(sleepModel, { client: trx })
+    }
+
+    // TODO: Explicitar retorno dos métodos e simplificar parametros
+    // TODO: É possivel simplificar e unir a GetSleepForDreamNoSleepByTimeKnown?
+    private async GetSleepForDreamNoSleepByDateKnown(userId: number, sleepDate: DateTime<true>, sleepPeriod: DreamNoSleepTimePeriod): Promise<number | null> {
+        const yesterdayIso = sleepDate.minus({ day: 1 }).toISODate()
+        const sleeps = await Sleep.query()
+            .where("user_id", userId)
+            .andWhere(query => {
+                query
+                    .where("date", sleepDate.toISODate())
+                    .orWhere("date", yesterdayIso)
+            })
+            .orderBy("id", "desc")
+        let sleepId: number | null = null
+
+        const { sleepStart, sleepEnd } = this.DefineSleepPeriodTimes(sleepDate, sleepPeriod)
+
+        for (const sleep of sleeps) {
+            if (this.CheckSleepPeriod(sleep, sleepStart, sleepEnd)) {
+                sleepId = sleep.id
+                break
+            }
+        }
+
+        return sleepId
+    }
+
+    // TODO: Explicitar retorno dos métodos e simplificar parametros
+    private DefineSleepPeriodTimes(periodDate: DateTime<true>, period: DreamNoSleepTimePeriod): { sleepStart: DateTime<true>, sleepEnd: DateTime<true> } {
+        let sleepStart = DateTime.fromMillis(periodDate.toMillis()) as DateTime<true>
+        let sleepEnd = DateTime.fromMillis(periodDate.toMillis()) as DateTime<true>
+
+        switch (period) {
+            case "morning":
+                sleepStart = sleepStart.set({ hour: 0, minute: 0, second: 0, millisecond: 0 })
+                sleepEnd = sleepStart.set({ hour: 12, minute: 59, second: 59, millisecond: 0 })
+                break
+            case "afternoon":
+                sleepStart = sleepStart.set({ hour: 12, minute: 0, second: 0, millisecond: 0 })
+                sleepEnd = sleepStart.set({ hour: 17, minute: 59, second: 59, millisecond: 0 })
+                break
+            case "night":
+                sleepStart = sleepStart.set({ hour: 18, minute: 0, second: 0, millisecond: 0 })
+                sleepEnd = sleepStart.set({ hour: 23, minute: 59, second: 59, millisecond: 0 })
+                break
+        }
+
+        return {
+            sleepStart: sleepStart,
+            sleepEnd: sleepEnd,
+        }
+    }
+
+    // TODO: Explicitar retorno dos métodos e simplificar parametros
+    // TODO: É possivel simplificar e unir a GetSleepForDreamNoSleepByDateKnown?
+    private async GetSleepForDreamNoSleepByTimeKnown(userId: number, sleepDate: DateTime<true>, sleepStart: DateTime<true>, sleepEnd: DateTime<true>): Promise<number | null> {
+        const yesterdayIso = sleepDate.minus({ day: 1 }).toISODate()
+        const sleeps = await Sleep.query()
+            .where("user_id", userId)
+            .andWhere(query => {
+                query
+                    .where("date", sleepDate.toISODate())
+                    .orWhere("date", yesterdayIso)
+            })
+            .orderBy("id", "desc")
+        let sleepId: number | null = null
+
+        for (const sleep of sleeps) {
+            if (this.CheckSleepPeriod(sleep, sleepStart, sleepEnd)) {
+                sleepId = sleep.id
+                break
+            }
+        }
+
+        return sleepId
+    }
+
+    // TODO: Explicitar retorno dos métodos e simplificar parametros
+    // TODO: Utilizar método original em SleepService
+    private CheckSleepPeriod(sleep: Sleep, sleepStart: DateTime<true>, sleepEnd: DateTime<true>): boolean {
+        const dbSleepStartEpoch = sleep.sleepStart.toMillis()
+        const dbSleepEndEpoch = sleep.sleepEnd.toMillis()
+        const sleepStartEpoch = sleepStart.toMillis()
+        const sleepEndEpoch = sleepEnd.toMillis()
+
+        return (
+            // o novo sono inicia antes do inicio sono e termina antes do fim
+            (
+                dbSleepStartEpoch >= sleepStartEpoch &&
+                dbSleepStartEpoch <= sleepEndEpoch &&
+                dbSleepEndEpoch >= sleepEndEpoch
+            ) ||
+            // o novo sono inicia após o inicio do sono e termina antes do fim
+            (
+                dbSleepStartEpoch >= sleepStartEpoch &&
+                dbSleepEndEpoch <= sleepEndEpoch
+            ) ||
+            // o novo sono inicia antes do inicio do sono e termina após o fim
+            (
+                dbSleepStartEpoch <= sleepStartEpoch &&
+                dbSleepEndEpoch >= sleepEndEpoch
+            ) ||
+            // o novo sono inicia após o inicio do sono e termina após o fim
+            (
+                dbSleepStartEpoch <= sleepStartEpoch &&
+                dbSleepEndEpoch >= sleepStartEpoch &&
+                dbSleepEndEpoch <= sleepEndEpoch
+            )
+        )
     }
 }

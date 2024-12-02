@@ -3,8 +3,7 @@ import vine from '@vinejs/vine'
 /** Valida a criação de um sonho completo */
 export const createCompleteDreamValidator = vine.compile(
     vine.object({
-        /** Sono referente é opcional pois o sonho pode criar o sono */
-        sleepId: vine.number().optional(),
+        sleepId: vine.number().nullable(),
         title: vine.string(),
         description: vine.string(),
         dreamPointOfViewId: vine.number(),
@@ -27,10 +26,18 @@ export const createCompleteDreamValidator = vine.compile(
         dreamRealityLevelId: vine.number(),
         eroticDream: vine.boolean(),
         hiddenDream: vine.boolean(),
-        personalAnalysis: vine.string().optional(),
+        personalAnalysis: vine.string().nullable(),
         tags: vine.array(vine.string()),
         /** Informações para criação de sono caso sleep_id não seja informado */
-        date: vine.date({ formats: ['YYYY/MM/DD', 'YYYY-MM-DD'] }).optional(),
+        dreamNoSleepDateKnown: vine.object({
+            date: vine.date({ formats: ['YYYY/MM/DD'] }),
+            period: vine.string().in(["morning", "afternoon", "night"]),
+        }).nullable(),
+        dreamNoSleepTimeKnown: vine.object({
+            date: vine.date({ formats: ['YYYY/MM/DD'] }),
+            sleepStart: vine.date({ formats: ['YYYY/MM/DD HH:mm:ss'] }),
+            sleepEnd: vine.date({ formats: ['YYYY/MM/DD HH:mm:ss'] }),
+        }).nullable(),
     })
 )
 

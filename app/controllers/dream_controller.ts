@@ -1,4 +1,4 @@
-import { createCompleteDreamValidator, createUncompleteDreamValidator, listDreamBySleepValidator, listDreamsByUserValidator, updateCompleteDreamValidator } from '#validators/dream'
+import { createCompleteDreamValidator, listDreamBySleepValidator, listDreamsByUserValidator, updateCompleteDreamValidator } from '#validators/dream'
 import { DateTime } from 'luxon'
 import { DreamListedByUser, DreamWithTags, ListDreamsByUser } from '../types/dreamTypes.js'
 import { inject } from "@adonisjs/core"
@@ -18,7 +18,7 @@ export default class DreamController {
         try {
             const dream = await request.validateUsing(createCompleteDreamValidator)
             await this.dreamService.Create({
-                sleepId: dream.sleepId ?? 0,
+                sleepId: dream.sleepId ?? undefined,
                 title: dream.title,
                 description: dream.description,
                 dreamPointOfViewId: dream.dreamPointOfViewId,
@@ -30,12 +30,24 @@ export default class DreamController {
                 dreamRealityLevelId: dream.dreamRealityLevelId,
                 eroticDream: dream.eroticDream,
                 hiddenDream: dream.hiddenDream,
-                personalAnalysis: dream.personalAnalysis,
+                personalAnalysis: dream.personalAnalysis ?? undefined,
                 dreamOriginId: 1,
-                date: dream.date === undefined ? DateTime.now() : DateTime.fromJSDate(dream.date),
-                userId:  auth.user!.id,
+                userId: auth.user!.id,
                 tags: dream.tags,
                 isComplete: true,
+                dreamNoSleepDateKnown: dream.dreamNoSleepDateKnown
+                    ? {
+                        date: DateTime.fromJSDate(dream.dreamNoSleepDateKnown.date),
+                        period: dream.dreamNoSleepDateKnown.period as any
+                    }
+                    : null,
+                dreamNoSleepTimeKnown: dream.dreamNoSleepTimeKnown
+                    ? {
+                        date: DateTime.fromJSDate(dream.dreamNoSleepTimeKnown.date),
+                        sleepStart: DateTime.fromJSDate(dream.dreamNoSleepTimeKnown.sleepStart),
+                        sleepEnd: DateTime.fromJSDate(dream.dreamNoSleepTimeKnown.sleepEnd)
+                    }
+                    : null,
             })
             ResponseSender<string>({ response, status: 201, data: "Sonho criado com sucesso." })
         }
@@ -44,45 +56,58 @@ export default class DreamController {
         }
     }
 
-    async createUncomplete({ request, response, auth }: HttpContext) {
-        try {
-            const dream = await request.validateUsing(createUncompleteDreamValidator)
-            await this.dreamService.CreateUncomplete({
-                sleepId: 0,
-                title: dream.title,
-                description: dream.description,
-                dreamPointOfViewId: dream.dreamPointOfViewId ?? 1,
-                climate: {
-                    ameno: false,
-                    calor: false,
-                    garoa: false,
-                    chuva: false,
-                    tempestade: false,
-                    nevoa: false,
-                    neve: false,
-                    multiplos: false,
-                    outro: false,
-                    indefinido: true
-                },
-                dreamHourId: dream.dreamHourId ?? 5,
-                dreamDurationId: dream.dreamDurationId ?? 1,
-                dreamLucidityLevelId: dream.dreamLucidityLevelId ?? 1,
-                dreamTypeId: dream.dreamTypeId ?? 1,
-                dreamRealityLevelId: dream.dreamRealityLevelId ?? 1,
-                eroticDream: dream.eroticDream ?? false,
-                hiddenDream: dream.hiddenDream ?? false,
-                personalAnalysis: dream.personalAnalysis,
-                dreamOriginId: dream.dreamOriginId,
-                date: dream.date === undefined ? DateTime.now() : DateTime.fromJSDate(dream.date),
-                userId:  auth.user!.id,
-                isComplete: false,
-            })
-            ResponseSender<string>({ response, status: 201, data: "Sonho criado com sucesso." })
-        }
-        catch (ex) {
-            ResponseSender<string>({ response, data: ex as Error })
-        }
-    }
+    // async createUncomplete({ request, response, auth }: HttpContext) {
+    //     try {
+    //         const dream = await request.validateUsing(createUncompleteDreamValidator)
+    //         await this.dreamService.CreateUncomplete({
+    //             sleepId: 0,
+    //             title: dream.title,
+    //             description: dream.description,
+    //             dreamPointOfViewId: dream.dreamPointOfViewId ?? 1,
+    //             climate: {
+    //                 ameno: false,
+    //                 calor: false,
+    //                 garoa: false,
+    //                 chuva: false,
+    //                 tempestade: false,
+    //                 nevoa: false,
+    //                 neve: false,
+    //                 multiplos: false,
+    //                 outro: false,
+    //                 indefinido: true
+    //             },
+    //             dreamHourId: dream.dreamHourId ?? 5,
+    //             dreamDurationId: dream.dreamDurationId ?? 1,
+    //             dreamLucidityLevelId: dream.dreamLucidityLevelId ?? 1,
+    //             dreamTypeId: dream.dreamTypeId ?? 1,
+    //             dreamRealityLevelId: dream.dreamRealityLevelId ?? 1,
+    //             eroticDream: dream.eroticDream ?? false,
+    //             hiddenDream: dream.hiddenDream ?? false,
+    //             personalAnalysis: dream.personalAnalysis ?? undefined,
+    //             dreamOriginId: dream.dreamOriginId,
+    //             userId: auth.user!.id,
+    //             isComplete: false,
+    //             tags: [],
+    //             dreamNoSleepDateKnown: dream.dreamNoSleepDateKnown
+    //                 ? {
+    //                     date: DateTime.fromJSDate(dream.dreamNoSleepDateKnown.date),
+    //                     period: dream.dreamNoSleepDateKnown.period as any
+    //                 }
+    //                 : null,
+    //             dreamNoSleepTimeKnown: dream.dreamNoSleepTimeKnown
+    //                 ? {
+    //                     date: DateTime.fromJSDate(dream.dreamNoSleepTimeKnown.date),
+    //                     sleepStart: DateTime.fromJSDate(dream.dreamNoSleepTimeKnown.sleepStart),
+    //                     sleepEnd: DateTime.fromJSDate(dream.dreamNoSleepTimeKnown.sleepEnd)
+    //                 }
+    //                 : null,
+    //         })
+    //         ResponseSender<string>({ response, status: 201, data: "Sonho criado com sucesso." })
+    //     }
+    //     catch (ex) {
+    //         ResponseSender<string>({ response, data: ex as Error })
+    //     }
+    // }
 
     async update({ request, response }: HttpContext) {
         try {

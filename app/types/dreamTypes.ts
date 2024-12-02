@@ -26,6 +26,46 @@ export type DreamOutput = {
 
 // TIPOS PERSONALIZADOS
 
+// TODO: Verificar tipos usados
+
+export type CreateDreamModel = {
+    sleepId?: number
+    title: string
+    description: string
+    dreamPointOfViewId: number
+    climate: DreamClimateType
+    dreamHourId: number
+    dreamDurationId: number
+    dreamLucidityLevelId: number
+    dreamTypeId: number
+    dreamRealityLevelId: number
+    eroticDream: boolean
+    hiddenDream: boolean
+    personalAnalysis?: string
+    dreamOriginId: number
+    isComplete: boolean
+    userId: number
+    tags: string[]
+    dreamNoSleepDateKnown: DreamNoSleepDateKnown | null
+    dreamNoSleepTimeKnown: DreamNoSleepTimeKnown | null
+}
+
+/** Dica de período de sono para sonho sem sono */
+export type DreamNoSleepTimePeriod = "morning" | "afternoon" | "night"
+
+/** Dica de data e período de sono para sonho sem sono */
+export type DreamNoSleepDateKnown = {
+    date: DateTime
+    period: DreamNoSleepTimePeriod
+}
+
+/** Dica de data e horário de sono para sonho sem sono */
+export type DreamNoSleepTimeKnown = {
+    date: DateTime
+    sleepStart: DateTime
+    sleepEnd: DateTime
+}
+
 /** Tipo de sonho para criação de sonho completo */
 type BaseDreamCompleteInput = {
     date?: DateTime
@@ -36,9 +76,6 @@ type BaseDreamCompleteInput = {
 export type DreamCompleteInput = {
     tags: string[]
 } & BaseDreamCompleteInput
-
-/** Tipo de sonho para criação de sonho não completo */
-export type DreamUncompleteInput = BaseDreamCompleteInput
 
 /** Tipo de sonho com tags (apenas título) para atualização de sonho */
 export type DreamCompleteUpdateInput = {

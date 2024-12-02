@@ -10,4 +10,6 @@ export default interface SleepServiceProps extends BaseProps<Sleep, SleepCreatio
     CreateSimpleSleep(simpleSleep: CreateSimpleSleepProps): Promise<void>
     /** Retorna informações simples do sono anterior */
     GetSimpleSleep(userId: number): Promise<GetSimpleSleepProps>
+    /** Valida a criação de um sono */
+    ValidateSleepCreation(userId: number, sleepDate: DateTime<boolean>, sleepStart: DateTime<boolean>, sleepEnd: DateTime<boolean>): Promise<void>
 }

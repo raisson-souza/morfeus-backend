@@ -63,7 +63,9 @@ router
     router
       .group(() => {
         router.post('/', [dreamController, 'create']),
-        router.post('/uncomplete', [dreamController, 'createUncomplete']),
+        // Rota de sonhos rápidos e importados removida
+        // necessita dividir entre sonho rápido e importado
+        // router.post('/uncomplete', [dreamController, 'createUncomplete']),
         router.put('/', [dreamController, 'update']),
         router.get('/list', [dreamController, 'list']),
         router.get('/listBySleep', [dreamController, 'listBySleep']),
