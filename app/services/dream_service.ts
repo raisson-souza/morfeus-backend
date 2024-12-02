@@ -517,7 +517,7 @@ export default class DreamService implements DreamServiceProps {
         const { sleepStart, sleepEnd } = this.DefineSleepPeriodTimes(sleepDate, sleepPeriod)
 
         for (const sleep of sleeps) {
-            if (this.CheckSleepPeriod(sleep, sleepStart, sleepEnd)) {
+            if (this.sleepService.CheckSleepPeriod(sleep, sleepStart.toMillis(), sleepEnd.toMillis())) {
                 sleepId = sleep.id
                 break
             }
@@ -567,46 +567,12 @@ export default class DreamService implements DreamServiceProps {
         let sleepId: number | null = null
 
         for (const sleep of sleeps) {
-            if (this.CheckSleepPeriod(sleep, sleepStart, sleepEnd)) {
+            if (this.sleepService.CheckSleepPeriod(sleep, sleepStart.toMillis(), sleepEnd.toMillis())) {
                 sleepId = sleep.id
                 break
             }
         }
 
         return sleepId
-    }
-
-    // TODO: Explicitar retorno dos métodos e simplificar parametros
-    // TODO: Utilizar método original em SleepService
-    private CheckSleepPeriod(sleep: Sleep, sleepStart: DateTime<true>, sleepEnd: DateTime<true>): boolean {
-        const dbSleepStartEpoch = sleep.sleepStart.toMillis()
-        const dbSleepEndEpoch = sleep.sleepEnd.toMillis()
-        const sleepStartEpoch = sleepStart.toMillis()
-        const sleepEndEpoch = sleepEnd.toMillis()
-
-        return (
-            // o novo sono inicia antes do inicio sono e termina antes do fim
-            (
-                dbSleepStartEpoch >= sleepStartEpoch &&
-                dbSleepStartEpoch <= sleepEndEpoch &&
-                dbSleepEndEpoch >= sleepEndEpoch
-            ) ||
-            // o novo sono inicia após o inicio do sono e termina antes do fim
-            (
-                dbSleepStartEpoch >= sleepStartEpoch &&
-                dbSleepEndEpoch <= sleepEndEpoch
-            ) ||
-            // o novo sono inicia antes do inicio do sono e termina após o fim
-            (
-                dbSleepStartEpoch <= sleepStartEpoch &&
-                dbSleepEndEpoch >= sleepEndEpoch
-            ) ||
-            // o novo sono inicia após o inicio do sono e termina após o fim
-            (
-                dbSleepStartEpoch <= sleepStartEpoch &&
-                dbSleepEndEpoch >= sleepStartEpoch &&
-                dbSleepEndEpoch <= sleepEndEpoch
-            )
-        )
     }
 }

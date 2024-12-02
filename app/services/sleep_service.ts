@@ -193,44 +193,43 @@ export default class SleepService implements SleepServiceProps {
 
         const sleepPeriodsConflicts: Sleep[] = []
 
-        // TODO: Criar método público para verificar conflito em períodos de sono e utilizar nos métodos na DreamService
         sameDateSleeps.map(sameDateSleep => {
-            const dbSleepStartEpoch = sameDateSleep.sleepStart.toMillis()
-            const dbSleepEndEpoch = sameDateSleep.sleepEnd.toMillis()
-            const sleepStartEpoch = newSleepStart.toMillis()
-            const sleepEndEpoch = newSleepEnd.toMillis()
-
-            if (
-                // o novo sono inicia antes do inicio sono e termina antes do fim
-                (
-                    dbSleepStartEpoch >= sleepStartEpoch &&
-                    dbSleepStartEpoch <= sleepEndEpoch &&
-                    dbSleepEndEpoch >= sleepEndEpoch
-                ) ||
-                // o novo sono inicia após o inicio do sono e termina antes do fim
-                (
-                    dbSleepStartEpoch >= sleepStartEpoch &&
-                    dbSleepEndEpoch <= sleepEndEpoch
-                ) ||
-                // o novo sono inicia antes do inicio do sono e termina após o fim
-                (
-                    dbSleepStartEpoch <= sleepStartEpoch &&
-                    dbSleepEndEpoch >= sleepEndEpoch
-                ) ||
-                // o novo sono inicia após o inicio do sono e termina após o fim
-                (
-                    dbSleepStartEpoch <= sleepStartEpoch &&
-                    dbSleepEndEpoch >= sleepStartEpoch &&
-                    dbSleepEndEpoch <= sleepEndEpoch
-                )
-            ) {
+            if (this.CheckSleepPeriod(sameDateSleep, newSleepStart.toMillis(), newSleepEnd.toMillis()))
                 sleepPeriodsConflicts.push(sameDateSleep)
-            }
         })
 
         return sleepPeriodsConflicts
     }
 
+    CheckSleepPeriod(sleep: Sleep, sleepStartEpoch: number, sleepEndEpoch: number): boolean {
+        const dbSleepStartEpoch = sleep.sleepStart.toMillis()
+        const dbSleepEndEpoch = sleep.sleepEnd.toMillis()
+
+        return (
+            // o novo sono inicia antes do inicio sono e termina antes do fim
+            (
+                dbSleepStartEpoch >= sleepStartEpoch &&
+                dbSleepStartEpoch <= sleepEndEpoch &&
+                dbSleepEndEpoch >= sleepEndEpoch
+            ) ||
+            // o novo sono inicia após o inicio do sono e termina antes do fim
+            (
+                dbSleepStartEpoch >= sleepStartEpoch &&
+                dbSleepEndEpoch <= sleepEndEpoch
+            ) ||
+            // o novo sono inicia antes do inicio do sono e termina após o fim
+            (
+                dbSleepStartEpoch <= sleepStartEpoch &&
+                dbSleepEndEpoch >= sleepEndEpoch
+            ) ||
+            // o novo sono inicia após o inicio do sono e termina após o fim
+            (
+                dbSleepStartEpoch <= sleepStartEpoch &&
+                dbSleepEndEpoch >= sleepStartEpoch &&
+                dbSleepEndEpoch <= sleepEndEpoch
+            )
+        )
+    }
     async Get(id: number) {
         return await Sleep.find(id)
     }
