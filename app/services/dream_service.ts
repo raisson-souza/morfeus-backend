@@ -62,7 +62,6 @@ export default class DreamService implements DreamServiceProps {
                 if (!userExists)
                     throw new CustomException(404, "Usuário referente ao sono a ser criado não encontrado.")
 
-                // TODO: caso horário conhecido, necessita entregar a data?
                 dreamModel.sleepId = await this.DefineSleepIdForDreamNoSleep(
                     dream.userId,
                     dream.dreamNoSleepTimeKnown,
@@ -446,7 +445,6 @@ export default class DreamService implements DreamServiceProps {
         return dreams
     }
 
-    // TODO: Explicitar retorno dos métodos e simplificar parametros
     private async DefineSleepIdForDreamNoSleep(userId: number, timeKnown: DreamNoSleepTimeKnown | null, dateKnown: DreamNoSleepDateKnown | null, trx: TransactionClientContract): Promise<number> {
         let sleepId: number | null = null
         let sleepStart: DateTime<boolean> | null = null
@@ -481,7 +479,6 @@ export default class DreamService implements DreamServiceProps {
         }
     }
 
-    // TODO: Explicitar retorno dos métodos e simplificar parametros
     private async CreateSleepForDreamNoSleep(userId: number, sleepStart: DateTime<true>, sleepEnd: DateTime<true>, trx: TransactionClientContract): Promise<Sleep> {
         const isNightSleep = this.sleepService.IsNightSleep(sleepStart, sleepEnd)
         const sleepDate = this.sleepService.DefineSleepDate(sleepEnd, isNightSleep)
@@ -500,33 +497,12 @@ export default class DreamService implements DreamServiceProps {
         return await Sleep.create(sleepModel, { client: trx })
     }
 
-    // TODO: Explicitar retorno dos métodos e simplificar parametros
-    // TODO: É possivel simplificar e unir a GetSleepForDreamNoSleepByTimeKnown?
     private async GetSleepForDreamNoSleepByDateKnown(userId: number, sleepDate: DateTime<true>, sleepPeriod: DreamNoSleepTimePeriod): Promise<number | null> {
-        const yesterdayIso = sleepDate.minus({ day: 1 }).toISODate()
-        const sleeps = await Sleep.query()
-            .where("user_id", userId)
-            .andWhere(query => {
-                query
-                    .where("date", sleepDate.toISODate())
-                    .orWhere("date", yesterdayIso)
-            })
-            .orderBy("id", "desc")
-        let sleepId: number | null = null
-
+        const sleeps = await this.GetSleepsForDreamNoSleepByDate(userId, sleepDate)
         const { sleepStart, sleepEnd } = this.DefineSleepPeriodTimes(sleepDate, sleepPeriod)
-
-        for (const sleep of sleeps) {
-            if (this.sleepService.CheckSleepPeriod(sleep, sleepStart.toMillis(), sleepEnd.toMillis())) {
-                sleepId = sleep.id
-                break
-            }
-        }
-
-        return sleepId
+        return this.FindSleepIdInSleepsByPeriod(sleeps, sleepStart.toMillis(), sleepEnd.toMillis())
     }
 
-    // TODO: Explicitar retorno dos métodos e simplificar parametros
     private DefineSleepPeriodTimes(periodDate: DateTime<true>, period: DreamNoSleepTimePeriod): { sleepStart: DateTime<true>, sleepEnd: DateTime<true> } {
         let sleepStart = DateTime.fromMillis(periodDate.toMillis()) as DateTime<true>
         let sleepEnd = DateTime.fromMillis(periodDate.toMillis()) as DateTime<true>
@@ -552,11 +528,14 @@ export default class DreamService implements DreamServiceProps {
         }
     }
 
-    // TODO: Explicitar retorno dos métodos e simplificar parametros
-    // TODO: É possivel simplificar e unir a GetSleepForDreamNoSleepByDateKnown?
     private async GetSleepForDreamNoSleepByTimeKnown(userId: number, sleepDate: DateTime<true>, sleepStart: DateTime<true>, sleepEnd: DateTime<true>): Promise<number | null> {
+        const sleeps = await this.GetSleepsForDreamNoSleepByDate(userId, sleepDate)
+        return this.FindSleepIdInSleepsByPeriod(sleeps, sleepStart.toMillis(), sleepEnd.toMillis())
+    }
+
+    private async GetSleepsForDreamNoSleepByDate(userId: number, sleepDate: DateTime<true>): Promise<Sleep[]> {
         const yesterdayIso = sleepDate.minus({ day: 1 }).toISODate()
-        const sleeps = await Sleep.query()
+        return await Sleep.query()
             .where("user_id", userId)
             .andWhere(query => {
                 query
@@ -564,15 +543,13 @@ export default class DreamService implements DreamServiceProps {
                     .orWhere("date", yesterdayIso)
             })
             .orderBy("id", "desc")
-        let sleepId: number | null = null
+    }
 
+    private FindSleepIdInSleepsByPeriod(sleeps: Sleep[], sleepStartEpoch: number, sleepEndEpoch: number): number | null {
         for (const sleep of sleeps) {
-            if (this.sleepService.CheckSleepPeriod(sleep, sleepStart.toMillis(), sleepEnd.toMillis())) {
-                sleepId = sleep.id
-                break
-            }
+            if (this.sleepService.CheckSleepPeriod(sleep, sleepStartEpoch, sleepEndEpoch))
+                return sleep.id
         }
-
-        return sleepId
+        return null
     }
 }
