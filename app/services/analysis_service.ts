@@ -263,6 +263,7 @@ export default class AnalysisService implements AnalysisServiceProps {
                             biologicalOccurences: sleep["biological_occurences"],
                             userId: sleep["user_id"],
                             dreamsId: [],
+                            isNightSleep: sleep["is_night_sleep"],
                         })
                     })
                 })
