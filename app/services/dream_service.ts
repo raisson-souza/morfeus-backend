@@ -510,7 +510,7 @@ export default class DreamService implements DreamServiceProps {
         switch (period) {
             case "morning":
                 sleepStart = sleepStart.set({ hour: 0, minute: 0, second: 0, millisecond: 0 })
-                sleepEnd = sleepStart.set({ hour: 12, minute: 59, second: 59, millisecond: 0 })
+                sleepEnd = sleepStart.set({ hour: 11, minute: 59, second: 59, millisecond: 0 })
                 break
             case "afternoon":
                 sleepStart = sleepStart.set({ hour: 12, minute: 0, second: 0, millisecond: 0 })
