@@ -73,6 +73,13 @@ export type SleepWithDreamsIds = {
     dreamsId: number[]
 } & SleepOutput
 
+export type SleepForDreamCreation = {
+    id: number
+    date: DateTime
+    sleepStart: DateTime
+    sleepEnd: DateTime
+}
+
 export const sleepInputModel : SleepInput = {
     userId: 0,
     date: DateTime.now(),

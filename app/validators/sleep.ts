@@ -138,3 +138,9 @@ export const listSleepsByUserValidator = vine.compile(
         date: vine.date({ formats: ['YYYY-MM-DD'] }),
     })
 )
+
+export const listSleepsForDreamCreationValidator = vine.compile(
+    vine.object({
+        pageNumber: vine.number().min(1),
+    })
+)

@@ -1,4 +1,4 @@
-import { createSimpleSleepValidator, createSleepValidator, listSleepsByUserValidator, updateSleepValidator } from '#validators/sleep'
+import { createSimpleSleepValidator, createSleepValidator, listSleepsByUserValidator, listSleepsForDreamCreationValidator, updateSleepValidator } from '#validators/sleep'
 import { CreateSleepWithDreamInput } from '../types/dreamTypes.js'
 import { DateTime } from 'luxon'
 import { GetSimpleSleepProps, ListSleepsByUserProps } from '../types/sleepTypes.js'
@@ -160,6 +160,17 @@ export default class SleepController {
         try {
             const simpleSleep = await this.sleepService.GetSimpleSleep(auth.user!.id)
             ResponseSender<GetSimpleSleepProps>({ response, data: simpleSleep })
+        }
+        catch (ex) {
+            ResponseSender<string>({ response, data: ex as Error })
+        }
+    }
+
+    async listSleepsForDreamCreation({ auth, request, response }: HttpContext) {
+        try {
+            const { pageNumber } = await request.validateUsing(listSleepsForDreamCreationValidator)
+            const sleepsForDreamCreation = await this.sleepService.ListSleepsForDreamCreation(auth.user!.id, pageNumber)
+            ResponseSender<ModelPaginatorContract<Sleep>>({ response, status: 200, data: sleepsForDreamCreation })
         }
         catch (ex) {
             ResponseSender<string>({ response, data: ex as Error })

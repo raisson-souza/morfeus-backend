@@ -382,4 +382,12 @@ export default class SleepService implements SleepServiceProps {
             }
         }
     }
+
+    async ListSleepsForDreamCreation(userId: number, pageNumber: number) {
+        return await Sleep.query()
+            .where("user_id", userId)
+            .select("id", "date", "sleep_start", "sleep_end")
+            .orderBy("id", "asc")
+            .paginate(pageNumber, 10)
+    }
 }
