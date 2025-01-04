@@ -261,9 +261,6 @@ export default class SleepService implements SleepServiceProps {
         const userExists = await User.find(userId)
         if (!userExists) throw new CustomException(404, "Usuário inexistente.")
 
-        if (DateTime.now().month < date.month)
-            throw new CustomException(400, "A data de listagem não pode ser maior que a data atual.")
-
         const listSleepsByUserProps: ListSleepsByUserProps[] = await db.query()
             .from('sleeps')
             .innerJoin('users', 'users.id', 'sleeps.user_id')
@@ -273,18 +270,17 @@ export default class SleepService implements SleepServiceProps {
                 query.whereRaw('EXTRACT(YEAR FROM sleeps.date) = ?', [ date.year ])
                 query.andWhereRaw('EXTRACT(MONTH FROM sleeps.date) = ?', [ date.month ])
             })
-            .select('sleeps.id', 'sleeps.date', 'sleeps.sleep_time', 'sleeps.wake_up_humor', 'sleeps.lay_down_humor', 'sleeps.biological_occurences')
-            .count('dreams.sleep_id', 'dreams_quantity')
+            .select('sleeps.id', 'sleeps.date', 'sleeps.sleep_time', 'sleeps.sleep_start', 'sleeps.sleep_end', 'sleeps.is_night_sleep')
             .groupBy('sleeps.id')
             .then(result => {
                 return result.map(sleep => {
                     return {
+                        id: sleep["id"],
                         date: sleep["date"],
-                        hoursSlept: sleep["sleep_time"],
-                        wakeUpHumor: sleep["wake_up_humor"],
-                        layDownHumor: sleep["lay_down_humor"],
-                        biologicalOccurrences: sleep["biological_occurences"],
-                        dreamsQuantity: Number.parseInt(sleep["dreams_quantity"]),
+                        sleepTime: sleep["sleep_time"],
+                        sleepStart: sleep["sleep_start"],
+                        sleepEnd: sleep["sleep_end"],
+                        isNightSleep: sleep["is_night_sleep"],
                     } as ListSleepsByUserProps
                 })
             })

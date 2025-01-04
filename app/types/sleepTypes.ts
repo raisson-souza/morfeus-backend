@@ -60,12 +60,12 @@ export type GetSimpleSleepProps = {
 
 /** Tipo para retorno na listagem de sonos por usuário */
 export type ListSleepsByUserProps = {
+    id: number
     date: DateTime
-    hoursSlept?: number
-    wakeUpHumor?: SleepHumorType
-    layDownHumor?: SleepHumorType
-    biologicalOccurrences?: BiologicalOccurencesType
-    dreamsQuantity: number
+    sleepTime: number
+    sleepStart: DateTime
+    sleepEnd: DateTime
+    isNightSleep: boolean
 }
 
 /** Tipo sono com listagem dos IDs de sonho */

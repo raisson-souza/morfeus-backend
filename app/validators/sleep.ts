@@ -135,7 +135,7 @@ export const createSimpleSleepValidator = vine.compile(
 export const listSleepsByUserValidator = vine.compile(
     vine.object({
         /** Data para extração do mês para a filtragem */
-        date: vine.date({ formats: ['YYYY-MM-DD'] }),
+        date: vine.date({ formats: ['YYYY-MM-DD', 'YYYY/MM/DD'] }),
     })
 )
 
