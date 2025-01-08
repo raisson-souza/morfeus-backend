@@ -263,8 +263,8 @@ export default class SleepService implements SleepServiceProps {
 
         const listSleepsByUserProps: ListSleepsByUserProps[] = await db.query()
             .from('sleeps')
-            .innerJoin('users', 'users.id', 'sleeps.user_id')
-            .innerJoin('dreams', 'dreams.sleep_id', 'sleeps.id')
+            .fullOuterJoin('users', 'users.id', 'sleeps.user_id')
+            .fullOuterJoin('dreams', 'dreams.sleep_id', 'sleeps.id')
             .where(query => {
                 query.where('users.id', userId)
                 query.whereRaw('EXTRACT(YEAR FROM sleeps.date) = ?', [ date.year ])
