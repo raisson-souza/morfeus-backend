@@ -12,36 +12,46 @@ import Tag from "#models/tag"
 import User from "#models/user"
 
 export default class AnalysisService implements AnalysisServiceProps {
-    async GetDreamAnalysis(userId: number, { month, year }: DateTime): Promise<DreamAnalysis | null> {
+    async GetDreamAnalysis(userId: number, { month, year }: DateTime): Promise<DreamAnalysis> {
         if (!await User.find(userId))
             throw new CustomException(404, "Usuário não encontrado.")
 
         if (month > DateTime.now().month && year > DateTime.now().year)
             throw new CustomException(400, "Não existem estatísticas de data maior que a atual.")
 
-        return await DreamAnalysis.query()
+        const dreamAnalysis = await DreamAnalysis.query()
             .where('user_id', userId)
             .andWhere('month', month)
             .andWhere('year', year)
             .select('*')
             .orderBy('id', 'desc')
             .first()
+
+        if (!dreamAnalysis)
+            throw new CustomException(404, "Análise de sonhos não criada.")
+
+        return dreamAnalysis
     }
 
-    async GetSleepAnalysis(userId: number, { month, year }: DateTime): Promise<SleepAnalysis | null> {
+    async GetSleepAnalysis(userId: number, { month, year }: DateTime): Promise<SleepAnalysis> {
         if (!await User.find(userId))
             throw new CustomException(404, "Usuário não encontrado.")
 
         if (month > DateTime.now().month && year > DateTime.now().year)
             throw new CustomException(400, "Não existem estatísticas de data maior que a atual.")
 
-        return await SleepAnalysis.query()
+        const sleepAnalysis = await SleepAnalysis.query()
             .where('user_id', userId)
             .andWhere('month', month)
             .andWhere('year', year)
             .select('*')
             .orderBy('id', 'desc')
             .first()
+
+        if (!sleepAnalysis)
+            throw new CustomException(404, "Análise de ciclos de sono não criada.")
+
+        return sleepAnalysis
     }
 
     async CreateDreamAnalysis(userId: number, { month, year }: DateTime): Promise<void> {
