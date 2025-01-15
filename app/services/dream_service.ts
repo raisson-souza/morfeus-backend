@@ -222,9 +222,6 @@ export default class DreamService implements DreamServiceProps {
         const userExists = await User.find(userId)
         if (!userExists) throw new CustomException(404, "Usuário inexistente para a listagem de sonhos.")
 
-        if (date > DateTime.now())
-            throw new CustomException(400, "A data de listagem não pode ser maior que a atual.")
-
         const dreamsFound: DreamListedByUser[] = await db.query()
             .from('dreams')
             .innerJoin('sleeps', 'sleeps.id', 'dreams.sleep_id')
