@@ -1,4 +1,5 @@
 import { AccessToken } from "@adonisjs/auth/access_tokens"
+import { Exception } from "@adonisjs/core/exceptions"
 import { Pagination } from "../types/pagiation.js"
 import { UserInput, UserOutput } from "../types/userTypes.js"
 import CustomException from "#exceptions/custom_exception"
@@ -53,8 +54,16 @@ export default class UserService implements UserServiceProps {
     }
 
     async Login(email: string, password: string) : Promise<AccessToken> {
-        const user = await User.verifyCredentials(email, password)
-        const token = await User.accessTokens.create(user, ["*"], { expiresIn: "1h" })
-        return token
+        try {
+            const user = await User.verifyCredentials(email, password)
+            const token = await User.accessTokens.create(user, ["*"], { expiresIn: "1h" })
+            return token
+        }
+        catch (ex) {
+            if ((ex as Error).message === "Invalid user credentials")
+                throw new CustomException(401, "Credenciais inválidas.")
+            else
+                throw new Exception((ex as Error).message)
+        }
     }
 }
