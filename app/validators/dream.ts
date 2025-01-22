@@ -46,16 +46,16 @@ export const createUncompleteDreamValidator = vine.compile(
     vine.object({
         title: vine.string(),
         description: vine.string(),
-        dreamPointOfViewId: vine.number().optional(),
-        climateId: vine.number().optional(),
-        dreamHourId: vine.number().optional(),
-        dreamDurationId: vine.number().optional(),
-        dreamLucidityLevelId: vine.number().optional(),
-        dreamTypeId: vine.number().optional(),
-        dreamRealityLevelId: vine.number().optional(),
-        eroticDream: vine.boolean().optional(),
-        hiddenDream: vine.boolean().optional(),
-        personalAnalysis: vine.string().optional(),
+        dreamPointOfViewId: vine.number().nullable(),
+        climateId: vine.number().nullable(),
+        dreamHourId: vine.number().nullable(),
+        dreamDurationId: vine.number().nullable(),
+        dreamLucidityLevelId: vine.number().nullable(),
+        dreamTypeId: vine.number().nullable(),
+        dreamRealityLevelId: vine.number().nullable(),
+        eroticDream: vine.boolean().nullable(),
+        hiddenDream: vine.boolean().nullable(),
+        personalAnalysis: vine.string().nullable(),
         dreamOriginId: vine.number(),
         date: vine.date({ formats: ['YYYY/MM/DD', 'YYYY-MM-DD'] }),
     })
@@ -88,7 +88,7 @@ export const updateCompleteDreamValidator = vine.compile(
         dreamRealityLevelId: vine.number(),
         eroticDream: vine.boolean(),
         hiddenDream: vine.boolean(),
-        personalAnalysis: vine.string().optional(),
+        personalAnalysis: vine.string().nullable(),
         tags: vine.array(vine.string())
     })
 )
@@ -96,8 +96,8 @@ export const updateCompleteDreamValidator = vine.compile(
 /** Valida a busca de sonhos por sono */
 export const listDreamBySleepValidator = vine.compile(
     vine.object({
-        sleep_id: vine.number().optional(),
-        date: vine.date({ formats: ['YYYY/MM/DD', 'YYYY-MM-DD'] }).optional(),
+        sleep_id: vine.number().nullable(),
+        date: vine.date({ formats: ['YYYY/MM/DD', 'YYYY-MM-DD'] }).nullable(),
     })
 )
 
@@ -112,26 +112,26 @@ export const listDreamsByUserValidator = vine.compile(
         /** Filtro acumulativo por característica específica de sonho */
         dreamEspecificCaracteristicsFilter: vine.object({
             /** Sem especificação de característica (ignora outras filtragens acumulativas) */
-            noEspecificy: vine.boolean().optional(),
-            dreamsWithPersonalAnalysis: vine.boolean().optional(),
+            noEspecificy: vine.boolean().nullable(),
+            dreamsWithPersonalAnalysis: vine.boolean().nullable(),
             dreamClimates: vine.object({
-                ameno: vine.boolean().optional(),
-                calor: vine.boolean().optional(),
-                garoa: vine.boolean().optional(),
-                chuva: vine.boolean().optional(),
-                tempestade: vine.boolean().optional(),
-                nevoa: vine.boolean().optional(),
-                neve: vine.boolean().optional(),
-                multiplos: vine.boolean().optional(),
-                outro: vine.boolean().optional(),
-                indefinido: vine.boolean().optional(),
-            }).optional(),
-            dreamHourId: vine.number().optional(),
-            dreamDurationId: vine.number().optional(),
-            dreamLucidityLevelId: vine.number().optional(),
-            dreamTypeId: vine.number().optional(),
-            dreamRealityLevelId: vine.number().optional(),
-            dreamPointOfViewId: vine.number().optional(),
+                ameno: vine.boolean().nullable(),
+                calor: vine.boolean().nullable(),
+                garoa: vine.boolean().nullable(),
+                chuva: vine.boolean().nullable(),
+                tempestade: vine.boolean().nullable(),
+                nevoa: vine.boolean().nullable(),
+                neve: vine.boolean().nullable(),
+                multiplos: vine.boolean().nullable(),
+                outro: vine.boolean().nullable(),
+                indefinido: vine.boolean().nullable(),
+            }).nullable(),
+            dreamHourId: vine.number().nullable(),
+            dreamDurationId: vine.number().nullable(),
+            dreamLucidityLevelId: vine.number().nullable(),
+            dreamTypeId: vine.number().nullable(),
+            dreamRealityLevelId: vine.number().nullable(),
+            dreamPointOfViewId: vine.number().nullable(),
         }),
     })
 )

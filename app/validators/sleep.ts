@@ -68,10 +68,10 @@ export const createSleepValidator = vine.compile(
                 dreamRealityLevelId: vine.number(),
                 eroticDream: vine.boolean(),
                 hiddenDream: vine.boolean(),
-                personalAnalysis: vine.string().optional(),
+                personalAnalysis: vine.string().nullable(),
                 tags: vine.array(vine.string())
             })
-        ).optional()
+        ).nullable()
     })
 )
 
@@ -125,7 +125,7 @@ export const updateSleepValidator = vine.compile(
 
 export const createSimpleSleepValidator = vine.compile(
     vine.object({
-        sleepId: vine.number().optional(),
+        sleepId: vine.number().nullable(),
         sleepStart: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] }),
         sleepEnd: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] }),
     })
