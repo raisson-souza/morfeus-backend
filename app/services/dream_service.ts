@@ -442,6 +442,21 @@ export default class DreamService implements DreamServiceProps {
         return dreams
     }
 
+    async GetUserDream(dreamId: number, userId: number): Promise<Dream | null> {
+        const dream = await this.Get(dreamId)
+        if (dream) {
+            await Sleep.query()
+                .where("id", dream.sleepId)
+                .andWhere("user_id", userId)
+                .select("id")
+                .then(result => {
+                    if (result.length === 0)
+                        throw new CustomException(403, "Você não pode visualizar este sonho pois ele não pertence a você.")
+                })
+        }
+        return dream
+    }
+
     private async DefineSleepIdForDreamNoSleep(userId: number, timeKnown: DreamNoSleepTimeKnown | null, dateKnown: DreamNoSleepDateKnown | null, trx: TransactionClientContract): Promise<number> {
         let sleepId: number | null = null
         let sleepStart: DateTime<boolean> | null = null

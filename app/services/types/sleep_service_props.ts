@@ -14,4 +14,5 @@ export default interface SleepServiceProps extends BaseProps<Sleep, SleepCreatio
     /** Valida a criação de um sono */
     ValidateSleepCreation(userId: number, sleepDate: DateTime<boolean>, sleepStart: DateTime<boolean>, sleepEnd: DateTime<boolean>): Promise<void>
     ListSleepsForDreamCreation(userId: number, pageNumber: number): Promise<ModelPaginatorContract<Sleep>>
+    GetUserSleep(sleepId: number, userId: number): Promise<Sleep | null>
 }

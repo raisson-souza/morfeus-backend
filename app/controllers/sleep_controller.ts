@@ -90,11 +90,11 @@ export default class SleepController {
         }
     }
 
-    async get({ params, response }: HttpContext) {
+    async get({ params, response, auth }: HttpContext) {
         try {
             const { id } = params
-            const sleep = await this.sleepService.Get(Number.parseInt(id ?? 0))
-            if (!sleep) throw new CustomException(404, "Sono não encontrado.")
+            const sleep = await this.sleepService.GetUserSleep(Number.parseInt(id ?? 0), auth.user!.id)
+            if (!sleep) throw new CustomException(404, "Ciclo de sono não encontrado.")
             ResponseSender<Sleep>({ response, data: sleep! })
         }
         catch (ex) {

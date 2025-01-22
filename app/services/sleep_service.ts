@@ -345,6 +345,15 @@ export default class SleepService implements SleepServiceProps {
         }
     }
 
+    async GetUserSleep(sleepId: number, userId: number): Promise<Sleep | null> {
+        const sleep = await this.Get(sleepId)
+        if (sleep) {
+            if (sleep.userId != userId)
+                throw new CustomException(403, "Você não pode visualizar este ciclo de sono pois ele não pertence a você.")
+        }
+        return sleep
+    }
+
     /**
      * Método replicado de DreamService para evitar recursão de injeção de dependência.
      */

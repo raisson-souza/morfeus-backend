@@ -149,10 +149,10 @@ export default class DreamController {
         }
     }
 
-    async get({ params, response }: HttpContext) {
+    async get({ params, response, auth }: HttpContext) {
         try {
             const { id } = params
-            const dream = await this.dreamService.Get(Number.parseInt(id ?? 0))
+            const dream = await this.dreamService.GetUserDream(Number.parseInt(id ?? 0), auth.user!.id)
             if (!dream) throw new CustomException(404, "Sonho não encontrado.")
             ResponseSender<Dream>({ response, data: dream })
         }
