@@ -44,7 +44,7 @@ export default class SleepController {
                     dreamRealityLevelId: dream.dreamRealityLevelId,
                     eroticDream: dream.eroticDream,
                     hiddenDream: dream.hiddenDream,
-                    personalAnalysis: dream.personalAnalysis,
+                    personalAnalysis: dream.personalAnalysis ?? undefined,
                     sleepId: 0,
                     dreamOriginId: 1,
                     tags: dream.tags,
@@ -147,7 +147,7 @@ export default class SleepController {
                 sleepEnd: DateTime.fromJSDate(sleepEnd),
                 userId: auth.user!.id,
                 sleepTime: this.calculateSleepTime(sleepStart, sleepEnd),
-                sleepId: sleepId,
+                sleepId: sleepId ?? undefined,
             })
             ResponseSender<string>({ response, status: 201, data: "Sono simples criado com sucesso." })
         }

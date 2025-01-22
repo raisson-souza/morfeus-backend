@@ -202,7 +202,7 @@ export default class DreamController {
         try {
             const { sleep_id, date } = await request.validateUsing(listDreamBySleepValidator)
             if (!sleep_id && !date) response.status(400).json("É necessário informar o ID do sono ou a data do sono.")
-            const dreamsListBySleep = await this.dreamService.ListDreamsBySleep(sleep_id, (date != undefined ? DateTime.fromJSDate(date) : DateTime.now()))
+            const dreamsListBySleep = await this.dreamService.ListDreamsBySleep(sleep_id ?? undefined, (date != undefined ? DateTime.fromJSDate(date) : DateTime.now()))
             ResponseSender<DreamWithTags[]>({ response, data: dreamsListBySleep })
         }
         catch (ex) {
