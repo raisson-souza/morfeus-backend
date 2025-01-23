@@ -191,7 +191,9 @@ export default class AnalysisService implements AnalysisServiceProps {
         const eroticDreamsAverage: number = (userDreams.filter(dream => dream.eroticDream).length / totalDreamsCount) * 100
 
         const longestDreamTitle: string = userDreams.reduce((longestDreamTitleAnalysisControl, dream) => {
-            return dream.title.length > longestDreamTitleAnalysisControl.title.length ? { title: dream.title, count: dream.title.length } : longestDreamTitleAnalysisControl
+            return (dream.title.length > longestDreamTitleAnalysisControl.title.length) && !dream.hiddenDream && !dream.eroticDream
+                ? { title: dream.title, count: dream.title.length }
+                : longestDreamTitleAnalysisControl
         }, { title: userDreams[0].title, count: userDreams[0].title.length } as LongestDreamTitleAnalysis)
         .title
 
