@@ -392,7 +392,7 @@ export default class SleepService implements SleepServiceProps {
         return await Sleep.query()
             .where("user_id", userId)
             .select("id", "date", "sleep_start", "sleep_end")
-            .orderBy("id", "asc")
+            .orderBy("id", "desc")
             .paginate(pageNumber, 5)
     }
 }
