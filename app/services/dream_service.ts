@@ -53,7 +53,7 @@ export default class DreamService implements DreamServiceProps {
 
                 await this.Validate(dream)
                 newDream = await Dream.create(dreamModel, { client: trx })
-                await this.CreateTags(dream.tags, newDream!.id, trx)
+                await this.ManageTags(dream.tags, newDream!.id, trx)
             } else {
                 if (!dream.dreamNoSleepDateKnown && !dream.dreamNoSleepTimeKnown)
                     throw new CustomException(400, "Não é possível criar um sonho sem informações necessárias sobre o sono referente.")
@@ -72,7 +72,7 @@ export default class DreamService implements DreamServiceProps {
                 await trx.transaction(async (childTrx) => {
                     this.Validate(dream)
                     newDream = await Dream.create(dreamModel, { client: childTrx })
-                    await this.CreateTags(dream.tags, newDream!.id, childTrx)
+                    await this.ManageTags(dream.tags, newDream!.id, childTrx)
                 })
             }
         })
@@ -169,7 +169,7 @@ export default class DreamService implements DreamServiceProps {
                 throw new CustomException(400, "Um sonho com o mesmo título já existe.")
 
             const newDream = await Dream.updateOrCreate({ id: dream.id }, updateDreamModel, { client: trx })
-            await this.CreateTags(dream.tags, newDream.id, trx)
+            await this.ManageTags(dream.tags, newDream.id, trx)
             return newDream
         })
     }
@@ -345,10 +345,31 @@ export default class DreamService implements DreamServiceProps {
         return dreamsFound
     }
 
-    async CreateTags(tags: string[], dreamId: number, trx: TransactionClientContract): Promise<void> {
-        if (tags.length === 0) return
+    async ManageTags(newTags: string[], dreamId: number, trx: TransactionClientContract): Promise<void> {
+        const oldTags = await db.query()
+            .from("dream_tags")
+            .innerJoin("tags", "tags.id", "dream_tags.tag_id")
+            .where("dream_id", dreamId)
+            .select("dream_tags.id as dreamTagId", "tags.id as id", "tags.title as title")
+            .then(result => {
+                return result.map(row => {
+                    return {
+                        "dreamTagId": Number.parseInt(row["dreamTagId"]),
+                        "title": row["title"] as string,
+                    }
+                })
+            })
 
-        for (const tag of tags) {
+        for (const oldTag of oldTags) {
+            // Iteramos sobre as tags antigas eliminando as relações de tags antigas não presentes entre as novas
+            if (!newTags.includes(oldTag.title)) {
+                await DreamTag.query()
+                    .where("id", oldTag.dreamTagId)
+                    .delete()
+            }
+        }
+
+        for (const tag of newTags) {
             let tagId: null | number = null
             // Procura se a tag já existe
             await Tag.findBy('title', tag.toUpperCase(), { client: trx })

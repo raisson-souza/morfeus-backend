@@ -10,7 +10,7 @@ export default interface DreamServiceProps extends BaseProps<Dream, CreateDreamM
     /** Lista sonhos pelo usuário */
     ListByUser(listingProps: ListDreamsByUser): Promise<DreamListedByUser[]>
     /** Cria / Atualiza as tags de um sonho */
-    CreateTags(tags: string[], dreamId: number, trx: TransactionClientContract): Promise<void>
+    ManageTags(newTags: string[], dreamId: number, trx: TransactionClientContract): Promise<void>
     /** Lista sonhos de um sono com tags */
     ListDreamsBySleep(sleepId: number, date: DateTime): Promise<DreamWithTags[]>
     GetUserDream(dreamId: number, userId: number): Promise<Dream | null>
