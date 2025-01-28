@@ -166,13 +166,13 @@ export default class SleepService implements SleepServiceProps {
             throw new CustomException(400, "Sono de mesmo período já cadastrado.")
     }
 
-    private async ValidateSleepUpdate(userId: number, sleepDate: DateTime<boolean>,sleepId: number, sleepStart: DateTime<boolean>, sleepEnd: DateTime<boolean>) {
+    private async ValidateSleepUpdate(userId: number, sleepDate: DateTime<boolean>, sleepId: number, sleepStart: DateTime<boolean>, sleepEnd: DateTime<boolean>) {
         const now = DateTime.now()
         if (sleepEnd.toMillis() > now.toMillis())
             throw new CustomException(400, "Não é possível cadastrar um sono futuro.")
         const samePeriodSleeps = await this.GetConflictingSleepIntervals(userId, sleepDate, sleepStart, sleepEnd)
-        const sleepToUpdate = samePeriodSleeps.find(sleep => { return sleep.id === sleepId })
-        if (!sleepToUpdate)
+        const sleepPeriodConflict = samePeriodSleeps.filter(sleep => sleep.id != sleepId).length > 0
+        if (sleepPeriodConflict)
             throw new CustomException(400, "Sono de mesmo período já cadastrado.")
     }
 
@@ -271,7 +271,7 @@ export default class SleepService implements SleepServiceProps {
                 query.andWhereRaw('EXTRACT(MONTH FROM sleeps.date) = ?', [ date.month ])
             })
             .select('sleeps.id', 'sleeps.date', 'sleeps.sleep_time', 'sleeps.sleep_start', 'sleeps.sleep_end', 'sleeps.is_night_sleep')
-            .groupBy('sleeps.id')
+            .orderBy('sleeps.id', "asc")
             .then(result => {
                 return result.map(sleep => {
                     return {
