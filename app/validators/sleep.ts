@@ -68,7 +68,7 @@ export const createSleepValidator = vine.compile(
                 dreamRealityLevelId: vine.number(),
                 eroticDream: vine.boolean(),
                 hiddenDream: vine.boolean(),
-                personalAnalysis: vine.string().nullable(),
+                personalAnalysis: vine.string().optional(),
                 tags: vine.array(vine.string())
             })
         ).nullable()
