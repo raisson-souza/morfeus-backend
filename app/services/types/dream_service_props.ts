@@ -1,5 +1,4 @@
-import { DateTime } from "luxon"
-import { DreamCompleteUpdateInput, DreamListedByUser, DreamWithTags, ListDreamsByUser, CreateDreamModel } from "../../types/dreamTypes.js"
+import { DreamCompleteUpdateInput, DreamListedByUser, ListDreamsByUser, CreateDreamModel, ListedDreamBySleepCycle } from "../../types/dreamTypes.js"
 import { TransactionClientContract } from "@adonisjs/lucid/types/database"
 import BaseProps from "./base_props.js"
 import Dream from "#models/dream"
@@ -12,6 +11,6 @@ export default interface DreamServiceProps extends BaseProps<Dream, CreateDreamM
     /** Cria / Atualiza as tags de um sonho */
     ManageTags(newTags: string[], dreamId: number, trx: TransactionClientContract): Promise<void>
     /** Lista sonhos de um sono com tags */
-    ListDreamsBySleep(sleepId: number, date: DateTime): Promise<DreamWithTags[]>
+    ListDreamsBySleep(sleepId: number): Promise<ListedDreamBySleepCycle[]>
     GetUserDream(dreamId: number, userId: number): Promise<Dream | null>
 }

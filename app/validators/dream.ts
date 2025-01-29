@@ -96,8 +96,7 @@ export const updateCompleteDreamValidator = vine.compile(
 /** Valida a busca de sonhos por sono */
 export const listDreamBySleepValidator = vine.compile(
     vine.object({
-        sleep_id: vine.number().nullable(),
-        date: vine.date({ formats: ['YYYY/MM/DD', 'YYYY-MM-DD'] }).nullable(),
+        sleep_id: vine.number(),
     })
 )
 

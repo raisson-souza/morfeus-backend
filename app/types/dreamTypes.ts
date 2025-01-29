@@ -124,6 +124,14 @@ export type DreamListedByUser = {
     tags: TagOutput[]
 }
 
+/** Listagem de sonhos de um ciclo de sono */
+export type ListedDreamBySleepCycle = {
+    id: number
+    title: string
+    tags: string[]
+    isHiddenOrErotic: boolean
+}
+
 export const dreamInputModel: DreamInput = {
     sleepId: 0,
     title: "",

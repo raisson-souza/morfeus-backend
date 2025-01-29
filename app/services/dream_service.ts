@@ -1,4 +1,4 @@
-import { CreateDreamModel, DreamCompleteUpdateInput, DreamInput, DreamListedByUser, DreamNoSleepDateKnown, DreamNoSleepTimeKnown, DreamNoSleepTimePeriod, DreamWithTags, ListDreamsByUser } from "../types/dreamTypes.js"
+import { CreateDreamModel, DreamCompleteUpdateInput, DreamInput, DreamListedByUser, DreamNoSleepDateKnown, DreamNoSleepTimeKnown, DreamNoSleepTimePeriod, ListDreamsByUser, ListedDreamBySleepCycle } from "../types/dreamTypes.js"
 import { DateTime } from "luxon"
 import { DreamTagInput } from "../types/DreamTagTypes.js"
 import { inject } from "@adonisjs/core"
@@ -401,66 +401,32 @@ export default class DreamService implements DreamServiceProps {
         }
     }
 
-    async ListDreamsBySleep(sleepId?: number, date?: DateTime): Promise<DreamWithTags[]> {
-        const dreams: DreamWithTags[] = []
-        let foundSleepId: number | null = null
+    async ListDreamsBySleep(sleepId: number): Promise<ListedDreamBySleepCycle[]> {
+        const dreamsWithTags: ListedDreamBySleepCycle[] = []
 
-        // Procura-se sono pelo sleepId
-        if (sleepId) {
-            const sleepIdById = await Sleep.find(sleepId)
-                .then(result => { return result?.id })
-            if (!sleepIdById) throw new CustomException(404, "Sono não encontrado.")
-            foundSleepId = sleepIdById
-        }
+        await Sleep.find(sleepId)
+            .then(result => {
+                if (!result)
+                    throw new CustomException(404, "Sono não encontrado.")
+            })
 
-        // Procura-se sono pela data
-        if (!foundSleepId && date) {
-            const sleepIdByDate = await Sleep.findBy("date", date)
-                .then(result => { return result?.id })
-            if (!sleepIdByDate) throw new CustomException(404, "Sono não encontrado.")
-            foundSleepId = sleepIdByDate
-        }
+        const dbDreams = await Dream.query().where("sleep_id", sleepId)
 
-        // Procuramos os sonhos do sono
-        const foundDreams = await Dream.query()
-            .where("sleep_id", foundSleepId!)
-
-        for (const dream of foundDreams) {
-            // Capturadas as tags do sonho
-            const tags: { tagId: number, tagTitle: string }[] = await Tag.query()
+        for (const dbDream of dbDreams) {
+            const tags: string[] = await Tag.query()
                 .innerJoin("dream_tags", "dream_tags.tag_id", "tags.id")
-                .where("dream_id", dream.id)
-                .then(tags => {
-                    return tags.map(tag => {
-                        return {
-                            tagId: tag.id,
-                            tagTitle: tag.title
-                        }
-                    })
-                })
+                .where("dream_id", dbDream.id)
+                .then(tags => tags.map(tag => tag.title))
 
-            // Montado o tipo do sonho com as tags
-            dreams.push({
-                sleepId: dream.sleepId,
-                title: dream.title,
-                description: dream.description,
-                dreamPointOfViewId: dream.dreamPointOfViewId,
-                climate: dream.climate,
-                dreamHourId: dream.dreamDurationId,
-                dreamDurationId: dream.dreamDurationId,
-                dreamLucidityLevelId: dream.dreamLucidityLevelId,
-                dreamTypeId: dream.dreamTypeId,
-                dreamRealityLevelId: dream.dreamRealityLevelId,
-                eroticDream: dream.eroticDream,
-                hiddenDream: dream.hiddenDream,
-                personalAnalysis: dream.personalAnalysis ?? undefined,
-                dreamOriginId: dream.dreamOriginId,
-                isComplete: dream.isComplete,
-                tags: tags
+            dreamsWithTags.push({
+                id: dbDream.id,
+                title: dbDream.title,
+                tags: tags,
+                isHiddenOrErotic: dbDream.hiddenDream || dbDream.eroticDream
             })
         }
 
-        return dreams
+        return dreamsWithTags
     }
 
     async GetUserDream(dreamId: number, userId: number): Promise<Dream | null> {
