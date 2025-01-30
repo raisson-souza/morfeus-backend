@@ -271,6 +271,7 @@ export default class SleepService implements SleepServiceProps {
                 query.andWhereRaw('EXTRACT(MONTH FROM sleeps.date) = ?', [ date.month ])
             })
             .select('sleeps.id', 'sleeps.date', 'sleeps.sleep_time', 'sleeps.sleep_start', 'sleeps.sleep_end', 'sleeps.is_night_sleep')
+            .groupBy('sleeps.id')
             .orderBy('sleeps.id', "asc")
             .then(result => {
                 return result.map(sleep => {
