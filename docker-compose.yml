@@ -18,7 +18,7 @@ services:
   backend1:
     build:
       context: .
-      dockerfile: backend.dockerfile
+      dockerfile: backend1.dockerfile
     restart: always
     container_name: backend1
     env_file: ".env"
@@ -32,7 +32,7 @@ services:
   backend2:
     build:
       context: .
-      dockerfile: backend.dockerfile
+      dockerfile: backend2.dockerfile
     restart: always
     container_name: backend2
     env_file: ".env"
@@ -40,6 +40,7 @@ services:
       - "3002:3000"
     depends_on:
       - database
+      - backend1
     networks:
       - morfeus-network
 
