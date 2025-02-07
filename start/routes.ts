@@ -26,6 +26,7 @@ router
       .group(() => {
         router.post('/', [userController, 'create']),
         router.put('/', [userController, 'update']).use(middleware.auth({ guards: ['api'] })),
+        router.post('/data_deletion', [userController, 'dataDeletion']).use(middleware.auth({ guards: ['api'] })),
         router.get('/list', [userController, 'list']).use(middleware.auth({ guards: ['api'] })),
         router.get('/:id', [userController, 'get']).use(middleware.auth({ guards: ['api'] })),
         router.delete('/:id', [userController, 'delete']).use(middleware.auth({ guards: ['api'] })),

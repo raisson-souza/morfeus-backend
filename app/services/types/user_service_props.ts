@@ -6,4 +6,6 @@ import User from "#models/user"
 export default interface UserServiceProps extends BaseProps<User, UserInput, UserOutput> {
     /** Realiza o login */
     Login(email: string, password: string): Promise<AccessToken>
+    /** Realiza a exclusão de dados do usuário */
+    DataDeletion(userId: number): Promise<string>
 }

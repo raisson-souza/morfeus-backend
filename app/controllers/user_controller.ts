@@ -90,4 +90,14 @@ export default class UserController {
             ResponseSender<string>({ response, data: ex as Error })
         }
     }
+
+    async dataDeletion({ response, auth }: HttpContext) : Promise<void> {
+        try {
+            const msg = await this.userService.DataDeletion(auth.user!.id)
+            ResponseSender<string>({ response, data: msg })
+        }
+        catch (ex) {
+            ResponseSender<string>({ response, data: ex as Error })
+        }
+    }
 }

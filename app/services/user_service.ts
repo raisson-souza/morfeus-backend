@@ -74,4 +74,13 @@ export default class UserService implements UserServiceProps {
                 throw new Exception((ex as Error).message)
         }
     }
+
+    async DataDeletion(userId: number): Promise<string> {
+        const user = await this.Get(userId)
+        if (!user) throw new CustomException(404, "Usuário não encontrado.")
+
+        await user.delete()
+
+        return `Usuário ${ user.fullName } deletado com sucesso.`
+    }
 }
