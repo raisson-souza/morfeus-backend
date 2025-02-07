@@ -15,11 +15,19 @@ export default class UserService implements UserServiceProps {
         })
     }
 
-    async Update(user: UserOutput, validate = true) : Promise<User> {
+    async Update(user: UserOutput, _ = false) : Promise<User> {
         const userFound = await this.Get(user.id)
         if (!userFound) throw new CustomException(404, "Usuário não encontrado.")
         return await db.transaction(async (trx) => {
-            if (validate) await this.Validate(user)
+            const emailInUse = await User.query()
+                .whereNot("id", user.id)
+                .andWhere("email", user.email)
+                .select("id")
+                .then(result => result.length >= 1)
+
+            if (emailInUse)
+                throw new CustomException(400, "Email já em uso no sistema.")
+
             return await User.updateOrCreate({ id: user.id }, user, { client: trx })
         })
     }
