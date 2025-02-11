@@ -14,7 +14,13 @@ export default class UserService implements UserServiceProps {
     async Create(user: UserInput, validate = true) : Promise<User> {
         return await db.transaction(async (trx) => {
             if (validate) await this.Validate(user)
-            return await User.create(user, { client: trx })
+            const newUser = await User.create(user, { client: trx })
+            await EmailSender.Send({
+                subject: "Bem Vindo!",
+                text: "Você acabou de criar uma conta no Morfeus.",
+                to: newUser.email,
+            })
+            return newUser
         })
     }
 
