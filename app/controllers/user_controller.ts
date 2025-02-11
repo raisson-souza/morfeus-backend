@@ -1,4 +1,4 @@
-import { createUserValidator, loginValidator, updateUserValidator } from '#validators/user'
+import { createUserValidator, finishAccountRecoveryValidator, loginValidator, updateUserValidator } from '#validators/user'
 import { DateTime } from 'luxon'
 import { inject } from '@adonisjs/core'
 import { LoginResponse } from '../types/loginTypes.js'
@@ -94,6 +94,43 @@ export default class UserController {
     async dataDeletion({ response, auth }: HttpContext) : Promise<void> {
         try {
             const msg = await this.userService.DataDeletion(auth.user!.id)
+            ResponseSender<string>({ response, data: msg })
+        }
+        catch (ex) {
+            ResponseSender<string>({ response, data: ex as Error })
+        }
+    }
+
+    async createAccountRecovery({ response, params }: HttpContext) : Promise<void> {
+        try {
+            const { email } = params
+            await this.userService.CreateAccountRecovery(email)
+            ResponseSender<string>({ response, data: "Recuperação de conta criada com sucesso." })
+        }
+        catch (ex) {
+            ResponseSender<string>({ response, data: ex as Error })
+        }
+    }
+
+    async checkAccountRecovery({ response, params }: HttpContext) : Promise<void> {
+        try {
+            const { code } = params
+            const msg = await this.userService.CheckAccountRecovery(code)
+            ResponseSender<string>({ response, data: msg })
+        }
+        catch (ex) {
+            ResponseSender<string>({ response, data: ex as Error })
+        }
+    }
+
+    async finishAccountRecovery({ request, response }: HttpContext) : Promise<void> {
+        try {
+            const { code, email, password } = await request.validateUsing(finishAccountRecoveryValidator)
+            const msg = await this.userService.FinishAccountRecovery({
+                email: email,
+                password: password,
+                code: code,
+            })
             ResponseSender<string>({ response, data: msg })
         }
         catch (ex) {

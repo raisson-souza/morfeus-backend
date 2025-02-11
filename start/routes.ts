@@ -43,6 +43,15 @@ router
           .group(() => { router.post('/list', [dreamController, 'listByUser']) })
           .prefix('/dreams')
           .use(middleware.auth({ guards: ['api'] }))
+
+        // Recuperação de conta
+        router
+          .group(() => {
+            router.post('/finish', [userController, 'finishAccountRecovery'])
+            router.post('/:email', [userController, 'createAccountRecovery'])
+            router.get('/:code', [userController, 'checkAccountRecovery'])
+          })
+          .prefix('/account_recovery')
       })
       .prefix('/users'),
 

@@ -25,3 +25,12 @@ export const loginValidator = vine.compile(
         password: vine.string().trim(),
     })
 )
+
+/** Valida a atualização de um usuário */
+export const finishAccountRecoveryValidator = vine.compile(
+    vine.object({
+        email: vine.string().email(),
+        password: vine.string().trim(),
+        code: vine.string().trim(),
+    })
+)
