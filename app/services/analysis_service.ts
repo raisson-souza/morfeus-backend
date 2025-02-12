@@ -571,22 +571,22 @@ export default class AnalysisService implements AnalysisServiceProps {
         )[0].sleepTime!
 
         /** Captura a duração do maior e menor sono */
-        const sleepDurationAnalysis = userSleeps.reduce((sleepDurationControl, sleep) => {
+        const sleepDurationAnalysis = userSleeps.reduce((sleepDurationControl, currentSleep) => {
             const currentAnalysisControl = {
                 mostSleepDuration: sleepDurationControl.mostSleepDuration,
                 leastSleepDuration: sleepDurationControl.leastSleepDuration,
             }
 
-            if (sleep.sleepTime) {
-                if (sleep.sleepTime > sleepDurationControl.mostSleepDuration)
-                    currentAnalysisControl.mostSleepDuration = sleep.sleepTime
-                else
-                    currentAnalysisControl.leastSleepDuration = sleep.sleepTime
+            if (currentSleep.sleepTime) {
+                if (currentSleep.sleepTime > sleepDurationControl.mostSleepDuration)
+                    currentAnalysisControl.mostSleepDuration = currentSleep.sleepTime
+                if (currentSleep.sleepTime < sleepDurationControl.leastSleepDuration)
+                    currentAnalysisControl.leastSleepDuration = currentSleep.sleepTime
             }
 
             return currentAnalysisControl
         }, {
-            mostSleepDuration: 0,
+            mostSleepDuration: defaultLeastSleepDurationControlValue,
             leastSleepDuration: defaultLeastSleepDurationControlValue,
         })
 
