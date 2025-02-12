@@ -183,7 +183,7 @@ export default class UserService implements UserServiceProps {
                 { id: user.id },
                 {
                     id: user.id,
-                    fullName: user.fullName!,
+                    fullName: user.fullName,
                     email: userModel.email,
                     password: userModel.password,
                 },
