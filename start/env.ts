@@ -32,4 +32,6 @@ export default await Env.create(new URL('../', import.meta.url), {
   EMAILSENDER_EMAILSERVICE: Env.schema.string(),
   EMAILSENDER_EMAIL: Env.schema.string(),
   EMAILSENDER_PASSWORD: Env.schema.string(),
+  REDIS_HOST: Env.schema.string(),
+  REDIS_PORT: Env.schema.number(),
 })

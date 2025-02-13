@@ -8,6 +8,7 @@ import CustomException from "#exceptions/custom_exception"
 import db from "@adonisjs/lucid/services/db"
 import EmailSender from "../utils/EmailSender.js"
 import User from "#models/user"
+import userQueue from "../jobs/userQueue.js"
 import UserServiceProps from "./types/user_service_props.js"
 
 export default class UserService implements UserServiceProps {
@@ -15,11 +16,7 @@ export default class UserService implements UserServiceProps {
         return await db.transaction(async (trx) => {
             if (validate) await this.Validate(user)
             const newUser = await User.create(user, { client: trx })
-            await EmailSender.Send({
-                subject: "Bem Vindo!",
-                text: "Você acabou de criar uma conta no Morfeus.",
-                to: newUser.email,
-            })
+            await userQueue.sendWelcomeEmail({ userName: newUser.fullName, userEmail: user.email })
             return newUser
         })
     }
