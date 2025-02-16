@@ -1,5 +1,6 @@
-import { createUserValidator, finishAccountRecoveryValidator, loginValidator, updateUserValidator } from '#validators/user'
+import { createUserValidator, exportUserDataValidator, finishAccountRecoveryValidator, loginValidator, updateUserValidator } from '#validators/user'
 import { DateTime } from 'luxon'
+import { ExportUserData } from '../types/userTypes.js'
 import { inject } from '@adonisjs/core'
 import { LoginResponse } from '../types/loginTypes.js'
 import { ModelPaginatorContract } from '@adonisjs/lucid/types/model'
@@ -132,6 +133,17 @@ export default class UserController {
                 code: code,
             })
             ResponseSender<string>({ response, data: msg })
+        }
+        catch (ex) {
+            ResponseSender<string>({ response, data: ex as Error })
+        }
+    }
+
+    async exportUserData({ request, response, auth }: HttpContext) : Promise<void> {
+        try {
+            const { startDate, endDate } = await request.validateUsing(exportUserDataValidator)
+            const data = await this.userService.ExportUserData(auth.user!.id, DateTime.fromJSDate(startDate) as DateTime<true>, DateTime.fromJSDate(endDate) as DateTime<true>)
+            ResponseSender<ExportUserData>({ response, data: data })
         }
         catch (ex) {
             ResponseSender<string>({ response, data: ex as Error })

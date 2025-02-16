@@ -1,12 +1,15 @@
 import { AccessToken } from "@adonisjs/auth/access_tokens"
 import { DateTime } from "luxon"
 import { Exception } from "@adonisjs/core/exceptions"
+import { ExportUserData, ExportUserDataDreams, ExportUserDataSleeps, UserInput, UserModalAccountRecovery, UserOutput } from "../types/userTypes.js"
 import { Pagination } from "../types/pagiation.js"
-import { UserInput, UserModalAccountRecovery, UserOutput } from "../types/userTypes.js"
 import AccountRecovery from "#models/account_recovery"
 import CustomException from "#exceptions/custom_exception"
 import db from "@adonisjs/lucid/services/db"
+import Dream from "#models/dream"
 import EmailSender from "../utils/EmailSender.js"
+import Sleep from "#models/sleep"
+import Tag from "#models/tag"
 import User from "#models/user"
 import userQueue from "../jobs/userQueue.js"
 import UserServiceProps from "./types/user_service_props.js"
@@ -200,6 +203,77 @@ export default class UserService implements UserServiceProps {
         })
 
         return "Conta recuperada com sucesso."
+    }
+
+    async ExportUserData(userId: number, startDate: DateTime<true>, endDate: DateTime<true>): Promise<ExportUserData> {
+        if (endDate.diff(startDate, "days").days > 360)
+            throw new CustomException(400, "Intervalo de tempo para a exportação é muito longo, escolha um intervalo menor.")
+
+        startDate = startDate.set({ day: 1, hour: 0, minute: 0, second: 0 })
+        endDate = endDate.set({ day: endDate.daysInMonth, hour: 23, minute: 59, second: 59 })
+
+        const dreams: ExportUserDataDreams[] = []
+        const sleeps: ExportUserDataSleeps[] = []
+
+        await Dream.query()
+            .innerJoin("sleeps", "sleeps.id", "dreams.sleep_id")
+            .where("sleeps.user_id", userId)
+            .andWhere("sleeps.date", ">=", startDate.toISO())
+            .andWhere("sleeps.date", "<=", endDate.toISO())
+            .orderBy("dreams.id", "asc")
+            .select("dreams.*")
+            .then(result => {
+                result.map(async (dream) => {
+                    const dreamTags: string[] = await Tag.query()
+                        .innerJoin("dream_tags", "dream_tags.tag_id", "tags.id")
+                        .where("dream_tags.dream_id", dream.id)
+                        .select("*")
+                        .then(tags => tags.map(tag => tag.title))
+
+                    dreams.push({
+                        id: dream.id,
+                        title: dream.title,
+                        description: dream.description,
+                        climate: dream.climate,
+                        eroticDream: dream.eroticDream,
+                        hiddenDream: dream.hiddenDream,
+                        personalAnalysis: dream.personalAnalysis,
+                        dreamOriginId: dream.dreamOriginId,
+                        dreamPointOfViewId: dream.dreamPointOfViewId,
+                        dreamHourId: dream.dreamHourId,
+                        dreamDurationId: dream.dreamDurationId,
+                        dreamLucidityLevelId: dream.dreamLucidityLevelId,
+                        dreamTypeId: dream.dreamTypeId,
+                        dreamRealityLevelId: dream.dreamRealityLevelId,
+                        sleepId: dream.sleepId,
+                        dreamTags: dreamTags,
+                    })
+                })
+            })
+
+        await Sleep.query()
+            .where("user_id", userId)
+            .andWhere("date", ">=", startDate.toISO())
+            .andWhere("date", "<=", endDate.toISO())
+            .orderBy("id", "asc")
+            .select("*")
+            .then(result => {
+                result.map(sleep => {
+                    sleeps.push({
+                        id: sleep.id,
+                        date: sleep.date,
+                        sleepTime: sleep.sleepTime,
+                        sleepStart: sleep.sleepStart,
+                        sleepEnd: sleep.sleepEnd,
+                        isNightSleep: sleep.isNightSleep,
+                        wakeUpHumor: sleep.wakeUpHumor,
+                        layDownHumor: sleep.layDownHumor,
+                        biologicalOccurences: sleep.biologicalOccurences,
+                    })
+                })
+            })
+
+        return { sleeps, dreams }
     }
 
     private async ValidateAccountRecovery(code: string): Promise<AccountRecovery | null> {

@@ -52,6 +52,14 @@ router
             router.get('/:code', [userController, 'checkAccountRecovery'])
           })
           .prefix('/account_recovery')
+
+        // Dados do usuário
+        router
+          .group(() => {
+            router.post('/export', [userController, 'exportUserData'])
+          })
+          .prefix('/data')
+          .use(middleware.auth({ guards: ['api'] }))
       })
       .prefix('/users'),
 

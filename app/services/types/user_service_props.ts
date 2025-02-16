@@ -1,5 +1,6 @@
 import { AccessToken } from "@adonisjs/auth/access_tokens"
-import { UserInput, UserModalAccountRecovery, UserOutput } from "../../types/userTypes.js"
+import { DateTime } from "luxon"
+import { ExportUserData, UserInput, UserModalAccountRecovery, UserOutput } from "../../types/userTypes.js"
 import BaseProps from "./base_props.js"
 import User from "#models/user"
 
@@ -14,4 +15,6 @@ export default interface UserServiceProps extends BaseProps<User, UserInput, Use
     CheckAccountRecovery(code: string): Promise<string>
     /** Realiza a finalização do processo de recuperação de conta */
     FinishAccountRecovery(userModel: UserModalAccountRecovery): Promise<string>
+    /** Realiza a exportação dos dados do usuário */
+    ExportUserData(userId: number, startDate: DateTime<true>, endDate: DateTime<true>): Promise<ExportUserData>
 }

@@ -34,3 +34,11 @@ export const finishAccountRecoveryValidator = vine.compile(
         code: vine.string().trim(),
     })
 )
+
+/** Valida a exportação de dados de um usuário */
+export const exportUserDataValidator = vine.compile(
+    vine.object({
+        startDate: vine.date({ formats: ['YYYY-MM-DD', 'YYYY/MM/DD'] }),
+        endDate: vine.date({ formats: ['YYYY-MM-DD', 'YYYY/MM/DD'] }),
+    })
+)
