@@ -206,6 +206,9 @@ export default class UserService implements UserServiceProps {
     }
 
     async ExportUserData(userId: number, startDate: DateTime<true>, endDate: DateTime<true>): Promise<ExportUserData> {
+        if (startDate > endDate)
+            throw new CustomException(400, "Intervalo de tempo inválido para exportação.")
+
         if (endDate.diff(startDate, "days").days > 360)
             throw new CustomException(400, "Intervalo de tempo para a exportação é muito longo, escolha um intervalo menor.")
 
