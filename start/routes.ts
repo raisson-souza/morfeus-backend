@@ -57,6 +57,7 @@ router
         router
           .group(() => {
             router.post('/export', [userController, 'exportUserData'])
+            router.post('/import', [userController, 'importUserData'])
           })
           .prefix('/data')
           .use(middleware.auth({ guards: ['api'] }))

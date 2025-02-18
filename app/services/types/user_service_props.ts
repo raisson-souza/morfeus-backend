@@ -1,6 +1,7 @@
 import { AccessToken } from "@adonisjs/auth/access_tokens"
 import { DateTime } from "luxon"
 import { ExportUserData, UserInput, UserModalAccountRecovery, UserOutput } from "../../types/userTypes.js"
+import { MultipartFile } from "@adonisjs/core/bodyparser"
 import BaseProps from "./base_props.js"
 import User from "#models/user"
 
@@ -17,4 +18,6 @@ export default interface UserServiceProps extends BaseProps<User, UserInput, Use
     FinishAccountRecovery(userModel: UserModalAccountRecovery): Promise<string>
     /** Realiza a exportação dos dados do usuário */
     ExportUserData(userId: number, startDate: DateTime<true>, endDate: DateTime<true>): Promise<ExportUserData>
+    /** Realiza a importação dos dados do usuário */
+    ImportUserData(userId: number, file: MultipartFile, isSameOriginImport: boolean, dreamsPath: string | null): Promise<string>
 }

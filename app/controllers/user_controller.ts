@@ -1,4 +1,4 @@
-import { createUserValidator, exportUserDataValidator, finishAccountRecoveryValidator, loginValidator, updateUserValidator } from '#validators/user'
+import { createUserValidator, exportUserDataValidator, finishAccountRecoveryValidator, importUserDataValidator, loginValidator, updateUserValidator } from '#validators/user'
 import { DateTime } from 'luxon'
 import { ExportUserData } from '../types/userTypes.js'
 import { inject } from '@adonisjs/core'
@@ -144,6 +144,25 @@ export default class UserController {
             const { startDate, endDate } = await request.validateUsing(exportUserDataValidator)
             const data = await this.userService.ExportUserData(auth.user!.id, DateTime.fromJSDate(startDate) as DateTime<true>, DateTime.fromJSDate(endDate) as DateTime<true>)
             ResponseSender<ExportUserData>({ response, data: data })
+        }
+        catch (ex) {
+            ResponseSender<string>({ response, data: ex as Error })
+        }
+    }
+
+    async importUserData({ request, response, auth }: HttpContext) : Promise<void> {
+        try {
+            const { isSameOriginImport, dreamsPath } = await request.validateUsing(importUserDataValidator)
+            const file = request.file("file", {
+                extnames: ["json"],
+                size: "3mb",
+            })
+
+            if (!file)
+                return ResponseSender<string>({ response: response, status: 400, data: "Arquivo não encontrado." })
+
+            const msg = await this.userService.ImportUserData(auth.user!.id, file, isSameOriginImport, dreamsPath)
+            ResponseSender<string>({ response, data: msg })
         }
         catch (ex) {
             ResponseSender<string>({ response, data: ex as Error })

@@ -42,3 +42,11 @@ export const exportUserDataValidator = vine.compile(
         endDate: vine.date({ formats: ['YYYY-MM-DD', 'YYYY/MM/DD'] }),
     })
 )
+
+/** Valida a importação de dados de um usuário */
+export const importUserDataValidator = vine.compile(
+    vine.object({
+        isSameOriginImport: vine.boolean(),
+        dreamsPath: vine.string().trim().nullable(),
+    })
+)

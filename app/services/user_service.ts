@@ -1,13 +1,17 @@
 import { AccessToken } from "@adonisjs/auth/access_tokens"
+import { cuid } from "@adonisjs/core/helpers"
 import { DateTime } from "luxon"
 import { Exception } from "@adonisjs/core/exceptions"
 import { ExportUserData, ExportUserDataDreams, ExportUserDataSleeps, UserInput, UserModalAccountRecovery, UserOutput } from "../types/userTypes.js"
+import { MultipartFile } from "@adonisjs/core/bodyparser"
 import { Pagination } from "../types/pagiation.js"
 import AccountRecovery from "#models/account_recovery"
+import app from "@adonisjs/core/services/app"
 import CustomException from "#exceptions/custom_exception"
 import db from "@adonisjs/lucid/services/db"
 import Dream from "#models/dream"
 import EmailSender from "../utils/EmailSender.js"
+import File from "#models/file"
 import Sleep from "#models/sleep"
 import Tag from "#models/tag"
 import User from "#models/user"
@@ -277,6 +281,29 @@ export default class UserService implements UserServiceProps {
             })
 
         return { sleeps, dreams }
+    }
+
+    async ImportUserData(userId: number, reqFile: MultipartFile, isSameOriginImport: boolean, dreamsPath: string | null): Promise<string> {
+        if (!reqFile.isValid || reqFile.hasErrors) {
+            if (reqFile.errors.length > 0) throw new CustomException(400, reqFile.errors[0].message)
+            else throw new CustomException(400, "Arquivo inválido.")
+        }
+
+        const fileName = `${ cuid() }.${ reqFile.extname }`
+
+        await File.create({
+            fileName: fileName,
+            isSameOriginImport: isSameOriginImport,
+            dreamsPath: dreamsPath,
+            expiresAt: DateTime.now().plus({ days: 3 }),
+            finished: false,
+        })
+
+        await reqFile.move(app.makePath("uploads"), { name: fileName })
+
+        // TODO: inicialização do Job
+
+        return "Importação iniciada com sucesso."
     }
 
     private async ValidateAccountRecovery(code: string): Promise<AccountRecovery | null> {
