@@ -11,6 +11,7 @@ export default class extends BaseSchema {
       table.string('dreams_path').nullable()
       table.dateTime('expires_at').notNullable()
       table.boolean('finished').notNullable()
+      table.boolean('file_deleted').notNullable().defaultTo(false)
       table.timestamp('created_at').defaultTo(this.db.rawQuery('now()').knexQuery).notNullable()
       table.timestamp('updated_at').nullable()
     })

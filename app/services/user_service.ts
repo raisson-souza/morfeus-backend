@@ -299,7 +299,7 @@ export default class UserService implements UserServiceProps {
             fileName: fileName,
             isSameOriginImport: isSameOriginImport,
             dreamsPath: dreamsPath,
-            expiresAt: DateTime.now().plus({ days: 3 }),
+            expiresAt: DateTime.now().plus({ days: 2 }),
             finished: false,
         })
 

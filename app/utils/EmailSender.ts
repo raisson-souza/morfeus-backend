@@ -8,6 +8,11 @@ type EmailSenderSendProps = {
     to: string
 }
 
+type EmailSenderSendInternalProps = {
+    subject: string
+    text: string
+}
+
 abstract class EmailSender
 {
     private static NodeMailer = nodemailer.createTransport(
@@ -29,6 +34,17 @@ abstract class EmailSender
             to: to,
             subject: `Morfeus - ${ subject }`,
             text: `${ text }\n\nPor favor, não responda este email.`,
+        })
+    }
+
+    static async SendInternal({
+        subject,
+        text,
+    }: EmailSenderSendInternalProps): Promise<SMTPTransport.SentMessageInfo> {
+        return await this.NodeMailer.sendMail({
+            to: env.get("EMAILSENDER_EMAIL"),
+            subject: `Morfeus - ${ subject }`,
+            text: `${ text }`,
         })
     }
 }

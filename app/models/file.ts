@@ -20,6 +20,9 @@ export default class File extends BaseModel {
   @column()
   declare finished: boolean
 
+  @column()
+  declare fileDeleted: boolean
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

@@ -1,7 +1,7 @@
+import { ClearImportFilesJob, ImportDataJob } from './types/importDataTypes.js'
 import { DateTime } from 'luxon'
 import { DreamTagInput } from '../types/DreamTagTypes.js'
 import { ExportUserData, ExportUserDataDreams, ExportUserDataSleeps } from '../types/userTypes.js'
-import { ImportDataJob } from './types/importDataTypes.js'
 import { Job, Worker } from 'bullmq'
 import { TagInput } from '../types/TagTypes.js'
 import { TransactionClientContract } from '@adonisjs/lucid/types/database'
@@ -33,6 +33,7 @@ type DreamTagImportType = {
 class ImportDataWorkers {
     constructor() {
         new Worker<ImportDataJob, any, string>("importData", this.importData, { connection: redisConnection })
+        new Worker<ClearImportFilesJob, any, string>("clearImportFiles", this.clearImportFiles, { connection: redisConnection })
     }
 
     private async importData(job: Job<ImportDataJob, any, string>) {
@@ -80,9 +81,8 @@ class ImportDataWorkers {
             if (fileExpired)
                 return await failJob(true)
 
-            const absolutePath = app.makePath('uploads', file.fileName)
-
-            await fs.readFile(absolutePath, "utf8")
+            const filePath = app.makePath('uploads', file.fileName)
+            await fs.readFile(filePath, "utf8")
                 .then(async (data) => {
                     try {
                         if (file.isSameOriginImport) {
@@ -126,6 +126,67 @@ class ImportDataWorkers {
                 text: `Olá ${ user.name }, o processo de importação de dados solicitado acabou de finalizar.\n${ emailMessage }`,
                 to: user.email,
             })
+        }
+    }
+
+    private async clearImportFiles(_: Job<ClearImportFilesJob, any, string>) {
+        try {
+            const deleteFile = async (fileName: string) => {
+                try {
+                    const filePath = app.makePath('uploads', fileName)
+                    await fs.rm(filePath)
+                }
+                catch { }
+            }
+
+            // Registros não finalizados são buscados para validar a expiração e deletar o arquivo
+            const notFinishedFiles = await File.query()
+                .where("finished", false)
+                .orderBy("id", "desc")
+
+            if (notFinishedFiles.length > 0) {
+                for (const notFinishedFile of notFinishedFiles) {
+                    const isFileExpired = notFinishedFile.expiresAt.diff(notFinishedFile.createdAt, "days").days <= 0
+
+                    if (isFileExpired) {
+                        await deleteFile(notFinishedFile.fileName)
+                        await File.query()
+                            .where("id", notFinishedFile.id)
+                            .update({ ...notFinishedFile.toJSON(), finished: true, fileDeleted: true })
+                    }
+                }
+            }
+            notFinishedFiles.length = 0
+
+            // Registros já finalizados, porém com o arquivo não deletado são buscados para efetuar a exclusão
+            const finishedNotDeletedFiles = await File.query()
+                .where("finished", true)
+                .andWhere("file_deleted", false)
+                .orderBy("id", "desc")
+
+            if (finishedNotDeletedFiles.length > 0) {
+                for (const finishedNotDeletedFile of finishedNotDeletedFiles) {
+                    await deleteFile(finishedNotDeletedFile.fileName)
+                    await File.query()
+                        .where("id", finishedNotDeletedFile.id)
+                        .update({ ...finishedNotDeletedFile.toJSON(), fileDeleted: true })
+                }
+            }
+            finishedNotDeletedFiles.length = 0
+
+            // Todos os arquivos ainda presentes em UPLOADS são catalogados e informados pelo sistema
+            const uploadsDirPath = app.makePath('uploads')
+            const importFilesQuantity = (await fs.readdir(uploadsDirPath)).length
+
+            if (importFilesQuantity > 0) {
+                await EmailSender.SendInternal({
+                    subject: `ClearImportFiles JOB ${ importFilesQuantity >= 50 ? "- MUITOS ARQUIVOS" : "" }`,
+                    text: `${ DateTime.now().toISO() } - ${ importFilesQuantity } arquivos ainda não deletados na pasta uploads.`
+                })
+            }
+        }
+        catch (ex) {
+            console.log(`Erro em clearImportFiles:\m ${ ex.message }`)
         }
     }
 
