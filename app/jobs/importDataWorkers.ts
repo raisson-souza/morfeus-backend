@@ -1,22 +1,33 @@
 import { DateTime } from 'luxon'
+import { DreamTagInput } from '../types/DreamTagTypes.js'
 import { ExportUserData, ExportUserDataDreams, ExportUserDataSleeps } from '../types/userTypes.js'
 import { ImportDataJob } from './types/importDataTypes.js'
 import { Job, Worker } from 'bullmq'
+import { TagInput } from '../types/TagTypes.js'
+import { TransactionClientContract } from '@adonisjs/lucid/types/database'
 import app from '@adonisjs/core/services/app'
 import db from '@adonisjs/lucid/services/db'
 import Dream from '#models/dream'
+import DreamTag from '#models/dream_tag'
 import EmailSender from '../utils/EmailSender.js'
 import File from '#models/file'
 import fs from 'node:fs/promises'
 import redisConnection from '#config/queue'
 import Sleep from '#models/sleep'
+import Tag from '#models/tag'
 import User from '#models/user'
 
 type ImportProcessEmailMessages = {
     errorOnSleepCreation: boolean
     errorOnDreamCreation: boolean
     dreamsWithNoSleep: boolean
+    dreamsWithNoTags: boolean
     totalFailureOnImportProcess: boolean
+}
+
+type DreamTagImportType = {
+    tags: string[]
+    dreamId: number
 }
 
 class ImportDataWorkers {
@@ -29,6 +40,7 @@ class ImportDataWorkers {
             errorOnSleepCreation: false,
             errorOnDreamCreation: false,
             dreamsWithNoSleep: false,
+            dreamsWithNoTags: false,
             totalFailureOnImportProcess: false,
         }
 
@@ -118,28 +130,33 @@ class ImportDataWorkers {
     }
 
     static async importSleeps(userId: number, sleeps: ExportUserDataSleeps[], dreams: ExportUserDataDreams[], emailMessages: ImportProcessEmailMessages) {
+        const updateDreamsIds = (originalSleepId: number, dbSleepId: number) => {
+            dreams.map((dream, i) => {
+                if (dream.sleepId === originalSleepId)
+                    dreams[i].sleepId = dbSleepId
+            })
+        }
+
         await db.transaction(async trx => {
             for (const sleep of sleeps) {
                 try {
                     sleep.date = DateTime.fromISO(sleep.date as any)
                     sleep.sleepStart = DateTime.fromISO(sleep.sleepStart as any)
                     sleep.sleepEnd = DateTime.fromISO(sleep.sleepEnd as any)
-
                     sleep.sleepTime = ImportDataWorkers.calculateSleepTime(sleep.sleepStart, sleep.sleepEnd)
 
                     const sameSleepIntervalSleeps = await ImportDataWorkers.getSameSleepIntervalSleeps(userId, sleep.date, sleep.sleepStart, sleep.sleepEnd)
 
                     if (sameSleepIntervalSleeps.length > 0) {
-                        dreams.map((dream, i) => {
-                            if (dream.sleepId === sleep.id)
-                                dreams[i].sleepId = sameSleepIntervalSleeps[0].id
-                        })
+                        updateDreamsIds(sleep.id, sameSleepIntervalSleeps[0].id)
                         continue
                     }
 
                     const { id, ...sleepModel } = sleep
 
-                    await Sleep.create({ ...sleepModel, userId: userId }, { client: trx })
+                    const newSleepId = await Sleep.create({ ...sleepModel, userId: userId }, { client: trx })
+                        .then(result => result.id)
+                    updateDreamsIds(sleep.id, newSleepId)
                 }
                 catch {
                     emailMessages.errorOnDreamCreation = true
@@ -211,8 +228,10 @@ class ImportDataWorkers {
     }
 
     static async importDreams(userId: number, dreams: ExportUserDataDreams[], emailMessages: ImportProcessEmailMessages) {
+        const dreamTagsImport: DreamTagImportType[] = []
+
         await db.transaction(async trx => {
-            const dreamsNoSleep: ExportUserDataDreams[] = []
+            let dreamsNoSleep: ExportUserDataDreams[] = []
 
             for (const dream of dreams) {
                 try {
@@ -240,9 +259,9 @@ class ImportDataWorkers {
 
                         const { id, ...dreamModel } = dream
 
-                        await Dream.create(dreamModel, { client: trx })
-
-                        // TODO: Utilizar ManageTags de DreamService
+                        const newDreamId = await Dream.create(dreamModel, { client: trx })
+                            .then(result => result.id)
+                        dreamTagsImport.push({ dreamId: newDreamId, tags: dream.dreamTags })
                     }
                 }
                 catch {
@@ -277,13 +296,78 @@ class ImportDataWorkers {
                 try {
                     dreamNoSleep.sleepId = lastSleepId
                     const { id, ...dreamModel } = dreamNoSleep
-                    await Dream.create(dreamModel, { client: trx })
+                    const newDreamId = await Dream.create(dreamModel, { client: trx })
+                        .then(result => result.id)
+                    dreamTagsImport.push({ dreamId: newDreamId, tags: dreamNoSleep.dreamTags })
                 }
                 catch {
                     emailMessages.errorOnDreamCreation = true
                 }
             }
+            dreamsNoSleep = []
         })
+
+        await db.transaction(async (trx) => {
+            for (const dreamTagImport of dreamTagsImport) {
+                try {
+                    await ImportDataWorkers.manageTags(dreamTagImport.tags, dreamTagImport.dreamId, trx)
+                }
+                catch {
+                    emailMessages.dreamsWithNoTags = true
+                }
+            }
+        })
+    }
+
+    static async manageTags(newTags: string[], dreamId: number, trx: TransactionClientContract): Promise<void> {
+        const oldTags = await db.query()
+            .from("dream_tags")
+            .innerJoin("tags", "tags.id", "dream_tags.tag_id")
+            .where("dream_id", dreamId)
+            .select("dream_tags.id as dreamTagId", "tags.id as id", "tags.title as title")
+            .then(result => {
+                return result.map(row => {
+                    return {
+                        "dreamTagId": Number.parseInt(row["dreamTagId"]),
+                        "title": row["title"] as string,
+                    }
+                })
+            })
+
+        for (const oldTag of oldTags) {
+            if (!newTags.includes(oldTag.title)) {
+                await DreamTag.query()
+                    .where("id", oldTag.dreamTagId)
+                    .delete()
+            }
+        }
+
+        for (const tag of newTags) {
+            let tagId: null | number = null
+            await Tag.findBy('title', tag.toUpperCase(), { client: trx })
+                .then(result => { if (result) tagId = result.id})
+
+            if (!tagId) {
+                const tagModel: TagInput = { title: tag.toUpperCase() }
+                const newTag = await Tag.create(tagModel, { client: trx })
+                tagId = newTag.id
+            }
+
+            const isTagAttached = await DreamTag
+                .query({ client: trx })
+                .where('tag_id', tagId)
+                .andWhere('dream_id', dreamId)
+                .select('id')
+                .then(tagsAttached => tagsAttached.length > 0)
+
+            if (!isTagAttached) {
+                const dreamTagModel: DreamTagInput = {
+                    dreamId: dreamId,
+                    tagId: tagId
+                }
+                await DreamTag.create(dreamTagModel, { client: trx })
+            }
+        }
     }
 
     static async importExternalDreams(userId: number, dreams: any[], emailMessages: ImportProcessEmailMessages) {
@@ -320,7 +404,8 @@ class ImportDataWorkers {
             emailMessages.totalFailureOnImportProcess ||
             emailMessages.errorOnSleepCreation ||
             emailMessages.errorOnDreamCreation ||
-            emailMessages.dreamsWithNoSleep
+            emailMessages.dreamsWithNoSleep ||
+            emailMessages.dreamsWithNoTags
         ) {
             messages.push(`${ success ? "Apesar do sucesso na importação," : "Durante a importação" } um ou mais erros ocorreram durante o processo:`)
         }
@@ -334,6 +419,8 @@ class ImportDataWorkers {
                 messages.push("Ocorreu um erro ao criar um ou mais sonhos, é possível que um ou mais destes erros não tenham sido contornados.")
             if (emailMessages.dreamsWithNoSleep)
                 messages.push("Não foi possível encontrar um ciclo de sono para um ou mais sonhos, portanto, um ou mais sonhos foram anexados ao último ciclo de sono cadastrado por você, por favor, verifique.")
+            if (emailMessages.dreamsWithNoTags)
+                messages.push("Não foi possível importar as tags de um ou mais sonhos, será necessário adicioná-las manualmente, por favor, verifique.")
         }
 
         let finalMessage = ""
