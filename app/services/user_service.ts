@@ -12,6 +12,7 @@ import db from "@adonisjs/lucid/services/db"
 import Dream from "#models/dream"
 import EmailSender from "../utils/EmailSender.js"
 import File from "#models/file"
+import ImportDataQueue from "../jobs/importDataQueue.js"
 import Sleep from "#models/sleep"
 import Tag from "#models/tag"
 import User from "#models/user"
@@ -291,7 +292,10 @@ export default class UserService implements UserServiceProps {
 
         const fileName = `${ cuid() }.${ reqFile.extname }`
 
-        await File.create({
+        if (!isSameOriginImport && (!dreamsPath || dreamsPath === ""))
+            throw new CustomException(400, "O caminho dos sonhos no arquivo JSON deve ser informado para a importação de sonhos.")
+
+        const file = await File.create({
             fileName: fileName,
             isSameOriginImport: isSameOriginImport,
             dreamsPath: dreamsPath,
@@ -301,7 +305,10 @@ export default class UserService implements UserServiceProps {
 
         await reqFile.move(app.makePath("uploads"), { name: fileName })
 
-        // TODO: inicialização do Job
+        await ImportDataQueue.importData({
+            fileId: file.id,
+            userId: userId,
+        })
 
         return "Importação iniciada com sucesso."
     }

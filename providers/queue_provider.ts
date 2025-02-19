@@ -1,3 +1,4 @@
+import ImportDataWorkers from '../app/jobs/importDataWorkers.js'
 import type { ApplicationService } from '@adonisjs/core/types'
 import UserWorkers from '../app/jobs/userWorkers.js'
 
@@ -19,6 +20,7 @@ export default class QueueProvider {
    */
   async start() {
     new UserWorkers()
+    new ImportDataWorkers()
   }
 
   /**
