@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon'
 import { Job, Worker } from 'bullmq'
 import { SendWelcomeEmailJob } from './types/userTypes.js'
 import EmailSender from '../utils/EmailSender.js'
@@ -9,12 +10,18 @@ class UserWorkers {
     }
 
     private async sendWelcomeMessage(job: Job<SendWelcomeEmailJob, any, string>) {
-        const { userName, userEmail } = job.data
-        await EmailSender.Send({
-            subject: "Bem Vindo!",
-            text: `Olá ${ userName }, você acabou de criar uma conta no Morfeus!\nSeja bem vindo!`,
-            to: userEmail,
-        })
+        try {
+            console.log(`${ DateTime.now().toISO() } - JOB sendWelcomeMessage`)
+            const { userName, userEmail } = job.data
+            await EmailSender.Send({
+                subject: "Bem Vindo!",
+                text: `Olá ${ userName }, você acabou de criar uma conta no Morfeus!\nSeja bem vindo!`,
+                to: userEmail,
+            })
+        }
+        catch (ex) {
+            console.log(`Erro em sendWelcomeMessage:\m ${ ex.message }`)
+        }
     }
 }
 

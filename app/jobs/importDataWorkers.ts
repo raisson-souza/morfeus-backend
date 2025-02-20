@@ -37,6 +37,7 @@ class ImportDataWorkers {
     }
 
     private async importData(job: Job<ImportDataJob, any, string>) {
+        console.log(`${ DateTime.now().toISO() } - JOB importData`)
         const emailMessages: ImportProcessEmailMessages = {
             errorOnSleepCreation: false,
             errorOnDreamCreation: false,
@@ -119,7 +120,8 @@ class ImportDataWorkers {
 
             await finishFile()
         }
-        catch {
+        catch (ex) {
+            console.log(`Erro em importData:\m ${ ex.message }`)
             const emailMessage = ImportDataWorkers.mountEmailMessage(false, emailMessages)
             await EmailSender.Send({
                 subject: "Finalização da importação de dados",
@@ -131,6 +133,8 @@ class ImportDataWorkers {
 
     private async clearImportFiles(_: Job<ClearImportFilesJob, any, string>) {
         try {
+            console.log(`${ DateTime.now().toISO() } - JOB clearImportFiles`)
+
             const deleteFile = async (fileName: string) => {
                 try {
                     const filePath = app.makePath('uploads', fileName)
