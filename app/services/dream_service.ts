@@ -219,7 +219,7 @@ export default class DreamService implements DreamServiceProps {
             date,
         } = listingProps
 
-        const userExists = await User.find(userId)
+        const userExists = await User.find(userId).then(result => result != null)
         if (!userExists) throw new CustomException(404, "Usuário inexistente para a listagem de sonhos.")
 
         const dreamsFound: DreamListedByUser[] = await db.query()
@@ -337,7 +337,7 @@ export default class DreamService implements DreamServiceProps {
         if (dreamsFound.length > 0) {
             for (const dream of dreamsFound) {
                 try {
-                    dream.tags = await this.tagService.ListByDream(dream.id)
+                    dream.tags = await this.tagService.ListByDream(userId, dream.id)
                 } catch { }
             }
         }

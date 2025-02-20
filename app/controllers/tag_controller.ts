@@ -22,10 +22,10 @@ export default class TagController {
         }
     }
 
-    async listByDream({ request, response }: HttpContext) {
+    async listByDream({ request, response, auth }: HttpContext) {
         try {
             const { dreamId } = await request.validateUsing(listTagsByDreamValidator)
-            const tagsListByDream = await this.tagService.ListByDream(dreamId)
+            const tagsListByDream = await this.tagService.ListByDream(auth.user!.id, dreamId)
             ResponseSender<TagOutput[]>({ response, data: tagsListByDream })
         }
         catch (ex) {
@@ -33,10 +33,10 @@ export default class TagController {
         }
     }
 
-    async listDreamsByTag({ request, response }: HttpContext) {
+    async listDreamsByTag({ request, response, auth }: HttpContext) {
         try {
             const { tagId } = await request.validateUsing(listDreamsByTagValidator)
-            const dreamsListByTag = await this.tagService.ListDreamsByTag(tagId)
+            const dreamsListByTag = await this.tagService.ListDreamsByTag(auth.user!.id, tagId)
             ResponseSender<Dream[]>({ response, data: dreamsListByTag })
         }
         catch (ex) {

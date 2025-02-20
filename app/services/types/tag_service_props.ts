@@ -9,7 +9,7 @@ export default interface TagServiceProps {
     */
     List(date: DateTime): Promise<TagWithQuantity[]>
     /** Lista tags de um determinado sonho */
-    ListByDream(dreamId: number): Promise<TagOutput[]>
+    ListByDream(userId: number, dreamId: number): Promise<TagOutput[]>
     /** Lista sonhos que possuem uma determinada tag */
-    ListDreamsByTag(tagId: number): Promise<Dream[]>
+    ListDreamsByTag(userId: number, tagId: number): Promise<Dream[]>
 }

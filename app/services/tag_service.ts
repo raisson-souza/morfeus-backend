@@ -34,7 +34,7 @@ export default class TagService implements TagServiceProps {
         return tags
     }
 
-    async ListByDream(dreamId: number): Promise<TagOutput[]> {
+    async ListByDream(userId: number, dreamId: number): Promise<TagOutput[]> {
         const dreamExists = await Dream.find(dreamId).then(result => { return result != null })
         if (!dreamExists)
             throw new CustomException(404, "Sonho não encontrado.")
@@ -42,7 +42,9 @@ export default class TagService implements TagServiceProps {
         const tags: TagOutput[] = await Tag.query()
             .innerJoin("dream_tags", "dream_tags.tag_id", "tags.id")
             .innerJoin("dreams", "dreams.id", "dream_tags.dream_id")
+            .innerJoin("sleeps", "sleeps.id", "dreams.sleep_id")
             .where("dream_id", dreamId)
+            .andWhere("sleeps.user_id", userId)
             .select("tags.*")
             .orderBy("tags.id")
             .then(result => {
@@ -57,7 +59,7 @@ export default class TagService implements TagServiceProps {
         return tags
     }
 
-    async ListDreamsByTag(tagId: number): Promise<Dream[]> {
+    async ListDreamsByTag(userId: number, tagId: number): Promise<Dream[]> {
         const tagExists = await Tag.find(tagId).then(result => { return result != null })
         if (!tagExists)
             throw new CustomException(404, "Tag não encontrada.")
@@ -66,7 +68,9 @@ export default class TagService implements TagServiceProps {
             .from("dreams")
             .innerJoin("dream_tags", "dream_tags.dream_id", "dreams.id")
             .innerJoin("tags", "tags.id", "dream_tags.tag_id")
+            .innerJoin("sleeps", "sleeps.id", "dreams.sleep_id")
             .where("dream_tags.tag_id", tagId)
+            .andWhere("sleeps.user_id", userId)
             .select("dreams.*")
             .orderBy("dreams.id")
 
