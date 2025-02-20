@@ -152,16 +152,13 @@ export default class UserController {
 
     async importUserData({ request, response, auth }: HttpContext) : Promise<void> {
         try {
-            const { isSameOriginImport, dreamsPath } = await request.validateUsing(importUserDataValidator)
+            const { isSameOriginImport, dreamsPath, fileContent } = await request.validateUsing(importUserDataValidator)
             const file = request.file("file", {
                 extnames: ["json"],
                 size: "3mb",
             })
 
-            if (!file)
-                return ResponseSender<string>({ response: response, status: 400, data: "Arquivo não encontrado." })
-
-            const msg = await this.userService.ImportUserData(auth.user!.id, file, isSameOriginImport, dreamsPath)
+            const msg = await this.userService.ImportUserData(auth.user!.id, file, fileContent, isSameOriginImport, dreamsPath)
             ResponseSender<string>({ response, data: msg })
         }
         catch (ex) {

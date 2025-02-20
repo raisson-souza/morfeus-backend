@@ -48,5 +48,6 @@ export const importUserDataValidator = vine.compile(
     vine.object({
         isSameOriginImport: vine.boolean(),
         dreamsPath: vine.string().trim().nullable(),
+        fileContent: vine.string().nullable(),
     })
 )

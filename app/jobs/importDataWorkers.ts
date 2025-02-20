@@ -297,8 +297,10 @@ class ImportDataWorkers {
             for (const dream of dreams) {
                 try {
                     const isDreamInDb = await Dream.query()
+                        .innerJoin("sleeps", "sleeps.id", "dreams.sleep_id")
                         .where("title", dream.title)
-                        .select("id")
+                        .andWhereNot("sleeps.user_id", "!=", userId)
+                        .select("dreams.id")
                         .first()
                         .then(result => result != null)
 
@@ -335,7 +337,7 @@ class ImportDataWorkers {
 
             const lastSleepId = await Sleep.query()
                 .where("user_id", userId)
-                .orderBy("id", "desc")
+                .orderBy("date", "desc")
                 .first()
                 .then(async (result) => {
                     if (!result) {

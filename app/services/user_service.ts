@@ -12,6 +12,7 @@ import db from "@adonisjs/lucid/services/db"
 import Dream from "#models/dream"
 import EmailSender from "../utils/EmailSender.js"
 import File from "#models/file"
+import fs from "fs/promises"
 import ImportDataQueue from "../jobs/importDataQueue.js"
 import Sleep from "#models/sleep"
 import Tag from "#models/tag"
@@ -284,16 +285,26 @@ export default class UserService implements UserServiceProps {
         return { sleeps, dreams }
     }
 
-    async ImportUserData(userId: number, reqFile: MultipartFile, isSameOriginImport: boolean, dreamsPath: string | null): Promise<string> {
-        if (!reqFile.isValid || reqFile.hasErrors) {
-            if (reqFile.errors.length > 0) throw new CustomException(400, reqFile.errors[0].message)
-            else throw new CustomException(400, "Arquivo inválido.")
+    async ImportUserData(userId: number, reqFile: MultipartFile | null, fileContent: string | null, isSameOriginImport: boolean, dreamsPath: string | null): Promise<string> {
+        if (!reqFile && !fileContent)
+            throw new CustomException(400, "Arquivo não encontrado.")
+
+        const fileName = `${ cuid() }.json`
+
+        if (reqFile) {
+            if (!reqFile.isValid || reqFile.hasErrors) {
+                if (reqFile.errors.length > 0) throw new CustomException(400, reqFile.errors[0].message)
+                else throw new CustomException(400, "Arquivo inválido.")
+            }
+
+            if (!isSameOriginImport && (!dreamsPath || dreamsPath === ""))
+                throw new CustomException(400, "O caminho dos sonhos no arquivo JSON deve ser informado para a importação de sonhos.")
+
+            await reqFile.move(app.makePath("uploads"), { name: fileName })
         }
-
-        const fileName = `${ cuid() }.${ reqFile.extname }`
-
-        if (!isSameOriginImport && (!dreamsPath || dreamsPath === ""))
-            throw new CustomException(400, "O caminho dos sonhos no arquivo JSON deve ser informado para a importação de sonhos.")
+        else if (fileContent) {
+            await fs.writeFile(app.makePath("uploads", fileName), fileContent, { encoding: "utf8" })
+        }
 
         const file = await File.create({
             fileName: fileName,
@@ -302,8 +313,6 @@ export default class UserService implements UserServiceProps {
             expiresAt: DateTime.now().plus({ days: 2 }),
             finished: false,
         })
-
-        await reqFile.move(app.makePath("uploads"), { name: fileName })
 
         await ImportDataQueue.importData({
             fileId: file.id,
