@@ -477,6 +477,17 @@ class ImportDataWorkers {
                                 if (!formattedDream.date)
                                     emailMessages.dreamsWithNoSleep = true
 
+                                const dreamExists = await Dream
+                                    .query()
+                                    .innerJoin("sleeps", "sleeps.id", "dreams.sleep_id")
+                                    .where("dreams.title", formattedDream.title)
+                                    .andWhere("sleeps.user_id", userId)
+                                    .first()
+                                    .then(result => result != null)
+
+                                if (dreamExists)
+                                    throw new Error("Sonho já existente.")
+
                                 const sleepId = await ImportDataWorkers.searchOrCreateSleepCycleForDream(trx, userId, null, formattedDream.date)
 
                                 const dreamId = await Dream.create({
