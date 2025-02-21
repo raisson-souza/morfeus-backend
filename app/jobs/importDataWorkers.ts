@@ -19,11 +19,14 @@ import Tag from '#models/tag'
 import User from '#models/user'
 
 type ImportProcessEmailMessages = {
+    totalDreams: number
+    totalDreamsImported: number
+    totalSleeps: number
+    totalSleepsImported: number
     errorOnSleepCreation: boolean
     errorOnDreamCreation: boolean
     dreamsWithNoSleep: boolean
     dreamsWithNoTags: boolean
-    totalFailureOnImportProcess: boolean
 }
 
 type DreamTagImportType = {
@@ -40,11 +43,14 @@ class ImportDataWorkers {
     private async importData(job: Job<ImportDataJob, any, string>) {
         console.log(`${ DateTime.now().toISO() } - JOB importData`)
         const emailMessages: ImportProcessEmailMessages = {
+            totalDreams: 0,
+            totalDreamsImported: 0,
+            totalSleeps: 0,
+            totalSleepsImported: 0,
             errorOnSleepCreation: false,
             errorOnDreamCreation: false,
             dreamsWithNoSleep: false,
             dreamsWithNoTags: false,
-            totalFailureOnImportProcess: false,
         }
 
         const user = await User
@@ -90,6 +96,8 @@ class ImportDataWorkers {
                         if (file.isSameOriginImport) {
                             const sameOriginImport: ExportUserData = JSON.parse(data)
                             data = ""
+                            emailMessages.totalDreams = sameOriginImport.dreams.length
+                            emailMessages.totalSleeps = sameOriginImport.sleeps.length
                             await ImportDataWorkers.importSleeps(userId, sameOriginImport.sleeps, sameOriginImport.dreams, emailMessages)
                             sameOriginImport.sleeps = []
                             await ImportDataWorkers.importDreams(userId, sameOriginImport.dreams, emailMessages)
@@ -97,8 +105,9 @@ class ImportDataWorkers {
                         }
                         else {
                             if (file.dreamsPath) {
-                                let importDreams = ImportDataWorkers.tryParseExternalDreamsImportPath(data, file.dreamsPath, emailMessages)
+                                let importDreams = ImportDataWorkers.tryParseExternalDreamsImportPath(data, file.dreamsPath)
                                 data = ""
+                                emailMessages.totalDreams = importDreams.length
                                 await ImportDataWorkers.importExternalDreams(userId, importDreams, emailMessages)
                                 importDreams = []
                                 return
@@ -114,10 +123,9 @@ class ImportDataWorkers {
                     throw new Error(ex.message)
                 })
 
-            const emailMessage = ImportDataWorkers.mountEmailMessage(true, emailMessages)
             await EmailSender.Send({
-                subject: "Finalização da importação de dados",
-                text: `Olá ${ user.name }, o processo de importação de dados solicitado acabou de finalizar.\n${ emailMessage }`,
+                subject: "Importação de Dados",
+                text: ImportDataWorkers.mountEmailMessage(user.name, true, emailMessages),
                 to: user.email,
             })
 
@@ -125,10 +133,9 @@ class ImportDataWorkers {
         }
         catch (ex) {
             console.log(`Erro em importData:\m ${ ex.message }`)
-            const emailMessage = ImportDataWorkers.mountEmailMessage(false, emailMessages)
             await EmailSender.Send({
-                subject: "Finalização da importação de dados",
-                text: `Olá ${ user.name }, o processo de importação de dados solicitado acabou de finalizar.\n${ emailMessage }`,
+                subject: "Importação de Dados",
+                text: ImportDataWorkers.mountEmailMessage(user.name, false, emailMessages),
                 to: user.email,
             })
         }
@@ -227,6 +234,7 @@ class ImportDataWorkers {
                         const newSleepId = await Sleep.create({ ...sleepModel, userId: userId }, { client: trx })
                             .then(result => result.id)
                         updateDreamsIds(sleep.id, newSleepId)
+                        emailMessages.totalSleepsImported += 1
                     }
                     catch {
                         emailMessages.errorOnDreamCreation = true
@@ -321,6 +329,7 @@ class ImportDataWorkers {
                         if (!isDreamInDb) {
                             const newSleepId = await ImportDataWorkers.searchOrCreateSleepCycleForDream(trx, userId, dream.sleepId, null)
                             dream.sleepId = newSleepId
+                            dream.dreamOriginId = 3
 
                             const { id, ...dreamModel } = dream
 
@@ -329,6 +338,8 @@ class ImportDataWorkers {
                                 .then(result => result.id)
                             dreamTagsImport.push({ dreamId: newDreamId, tags: dream.dreamTags })
                         }
+
+                        emailMessages.totalDreamsImported += 1
                     }
                     catch {
                         emailMessages.errorOnDreamCreation = true
@@ -491,7 +502,7 @@ class ImportDataWorkers {
                                         indefinido: true,
                                     },
                                     isComplete: true,
-                                    dreamOriginId: 1,
+                                    dreamOriginId: 3,
                                     dreamPointOfViewId: 1,
                                     dreamHourId: 5,
                                     dreamDurationId: 1,
@@ -503,6 +514,8 @@ class ImportDataWorkers {
 
                                 if (formattedDream.tags.length > 0)
                                     await ImportDataWorkers.manageTags(formattedDream.tags, dreamId, trx)
+
+                                emailMessages.totalDreamsImported += 1
                                 continue
                             }
                             emailMessages.errorOnDreamCreation = true
@@ -518,9 +531,7 @@ class ImportDataWorkers {
                 }
             })
         }
-        catch {
-            emailMessages.totalFailureOnImportProcess = true
-        }
+        catch { }
     }
 
     /** Buca e trata um sonho externo do usuário */
@@ -596,7 +607,7 @@ class ImportDataWorkers {
     }
 
     /** Busca o caminho dos sonhos no arquivo informado pelo usuário */
-    static tryParseExternalDreamsImportPath(data: string, dreamsPath: string, emailMessages: ImportProcessEmailMessages): any[] {
+    static tryParseExternalDreamsImportPath(data: string, dreamsPath: string): any[] {
         try {
             const dreamsPathList = dreamsPath.split("/")
             let parsedData = JSON.parse(data)
@@ -608,42 +619,57 @@ class ImportDataWorkers {
             return parsedData
         }
         catch {
-            emailMessages.totalFailureOnImportProcess = true
             throw new Error("Não foi possível encontrar os sonhos no arquivo de importação.")
         }
     }
 
     /** Monta a mensagem de finalização da importação para o email do usuário */
-    static mountEmailMessage(success: boolean, emailMessages: ImportProcessEmailMessages): string {
+    static mountEmailMessage(userName: string, success: boolean, emailMessages: ImportProcessEmailMessages): string {
+        const {
+            totalDreams,
+            totalDreamsImported,
+            totalSleeps,
+            totalSleepsImported,
+            errorOnSleepCreation,
+            errorOnDreamCreation,
+            dreamsWithNoSleep,
+            dreamsWithNoTags,
+        } = emailMessages
         const messages: string[] = []
 
         messages.push(
             success
-                ? "O processo de importação ocorreu com sucesso!"
-                : "O processo de importação não foi efetuado devido a um erro desconhecido, por favor, valide seu arquivo de importação ou a forma!"
+                ? `Olá ${ userName }, o processo de importação de dados solicitado por você finalizou com sucesso!`
+                : `Olá ${ userName }, ocorreu um erro no processo de importação de dados solicitado por você.`
         )
 
-        if (
-            emailMessages.totalFailureOnImportProcess ||
-            emailMessages.errorOnSleepCreation ||
-            emailMessages.errorOnDreamCreation ||
-            emailMessages.dreamsWithNoSleep ||
-            emailMessages.dreamsWithNoTags
-        ) {
-            messages.push(`${ success ? "Apesar do sucesso na importação," : "Durante a importação" } um ou mais erros ocorreram durante o processo:`)
-        }
+        messages.push(`Um total de ${ totalDreams } sonhos e ${ totalSleeps } ciclos de sono foram catalogados no arquivo de importação.`)
 
-        if (emailMessages.totalFailureOnImportProcess)
-            messages.push("Houve uma falha geral no processo de importação e nenhum registro foi importado, verifique seu arquivo de importação ou tente novamente.")
+        if (success) {
+            messages.push(`${ totalDreamsImported } sonhos e ${ totalSleepsImported } ciclos de sono foram importados com sucesso.`)
+            messages.push(`Não foi possível importar ${ totalDreams - totalDreamsImported } sonhos e ${ totalSleeps - totalSleepsImported } ciclos de sono.`)
+
+            const errorDuringImportProcess = errorOnSleepCreation || errorOnDreamCreation || dreamsWithNoSleep || dreamsWithNoTags
+
+            if (errorDuringImportProcess) {
+                messages.push("Apesar do sucesso na importação, alguns problemas ocorreram, são eles:")
+
+                if (errorOnSleepCreation)
+                    messages.push("Ocorreu um erro ao criar um ou mais ciclos de sono, é possível que você não veja alguns destes registros.")
+                if (errorOnDreamCreation)
+                    messages.push("Ocorreu um erro ao criar um ou mais sonhos, é possível que você não veja alguns destes registros.")
+                if (dreamsWithNoSleep)
+                    messages.push("Não foi possível encontrar um ciclo de sono para um ou mais sonhos, portanto, um ou mais sonhos foram anexados ao último ciclo de sono cadastrado por você, por favor, verifique.")
+                if (dreamsWithNoTags)
+                    messages.push("Não foi possível importar as tags de um ou mais sonhos, será necessário adicioná-las manualmente, por favor, verifique.")
+
+                messages.push("Se ainda desejar importar os registros que não foram importados, por favor, verifique os mesmos no seu arquivo de importação e tente novamente, edite se necessário.")
+                messages.push("Em caso de dúvidas ou problemas, entre em contato com o suporte e armazene seu arquivo de importação em um local seguro.")
+            }
+        }
         else {
-            if (emailMessages.errorOnSleepCreation)
-                messages.push("Ocorreu um erro ao criar um ou mais ciclos de sono, é possível que um ou mais destes erros não tenham sido contornados.")
-            if (emailMessages.errorOnDreamCreation)
-                messages.push("Ocorreu um erro ao criar um ou mais sonhos, é possível que um ou mais destes erros não tenham sido contornados.")
-            if (emailMessages.dreamsWithNoSleep)
-                messages.push("Não foi possível encontrar um ciclo de sono para um ou mais sonhos, portanto, um ou mais sonhos foram anexados ao último ciclo de sono cadastrado por você, por favor, verifique.")
-            if (emailMessages.dreamsWithNoTags)
-                messages.push("Não foi possível importar as tags de um ou mais sonhos, será necessário adicioná-las manualmente, por favor, verifique.")
+            messages.push("Houve uma falha geral na importação e nenhum registro foi importado, por favor, verifique seu arquivo de importação, a configuração de importação ou tente novamente mais tarde.")
+            messages.push("Caso essa não seja sua primeira tentativa de importação com erro, solicite suporte e armazene seu arquivo de importação em um local seguro.")
         }
 
         let finalMessage = ""
