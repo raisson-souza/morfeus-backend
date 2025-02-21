@@ -197,6 +197,7 @@ class ImportDataWorkers {
         }
     }
 
+    /** Importa os ciclos de sono do usuário */
     static async importSleeps(userId: number, sleeps: ExportUserDataSleeps[], dreams: ExportUserDataDreams[], emailMessages: ImportProcessEmailMessages) {
         const updateDreamsIds = (originalSleepId: number, dbSleepId: number) => {
             dreams.map((dream, i) => {
@@ -206,29 +207,35 @@ class ImportDataWorkers {
         }
 
         await db.transaction(async trx => {
-            for (const sleep of sleeps) {
-                try {
-                    sleep.date = DateTime.fromISO(sleep.date as any)
-                    sleep.sleepStart = DateTime.fromISO(sleep.sleepStart as any)
-                    sleep.sleepEnd = DateTime.fromISO(sleep.sleepEnd as any)
-                    sleep.sleepTime = ImportDataWorkers.calculateSleepTime(sleep.sleepStart, sleep.sleepEnd)
+            try {
+                for (const sleep of sleeps) {
+                    try {
+                        sleep.date = DateTime.fromISO(sleep.date as any)
+                        sleep.sleepStart = DateTime.fromISO(sleep.sleepStart as any)
+                        sleep.sleepEnd = DateTime.fromISO(sleep.sleepEnd as any)
+                        sleep.sleepTime = ImportDataWorkers.calculateSleepTime(sleep.sleepStart, sleep.sleepEnd)
 
-                    const sameSleepIntervalSleeps = await ImportDataWorkers.getSameSleepIntervalSleeps(userId, sleep.date, sleep.sleepStart, sleep.sleepEnd)
+                        const sameSleepIntervalSleeps = await ImportDataWorkers.getSameSleepIntervalSleeps(userId, sleep.date, sleep.sleepStart, sleep.sleepEnd)
 
-                    if (sameSleepIntervalSleeps.length > 0) {
-                        updateDreamsIds(sleep.id, sameSleepIntervalSleeps[0].id)
-                        continue
+                        if (sameSleepIntervalSleeps.length > 0) {
+                            updateDreamsIds(sleep.id, sameSleepIntervalSleeps[0].id)
+                            continue
+                        }
+
+                        const { id, ...sleepModel } = sleep
+
+                        const newSleepId = await Sleep.create({ ...sleepModel, userId: userId }, { client: trx })
+                            .then(result => result.id)
+                        updateDreamsIds(sleep.id, newSleepId)
                     }
-
-                    const { id, ...sleepModel } = sleep
-
-                    const newSleepId = await Sleep.create({ ...sleepModel, userId: userId }, { client: trx })
-                        .then(result => result.id)
-                    updateDreamsIds(sleep.id, newSleepId)
+                    catch {
+                        emailMessages.errorOnDreamCreation = true
+                    }
                 }
-                catch {
-                    emailMessages.errorOnDreamCreation = true
-                }
+                await trx.commit()
+            }
+            catch {
+                await trx.rollback()
             }
         })
     }
@@ -295,76 +302,43 @@ class ImportDataWorkers {
         return sleepEnd.diff(sleepStart, "hours").hours
     }
 
+    /** Importa os sonhos de mesma origem do usuário */
     static async importDreams(userId: number, dreams: ExportUserDataDreams[], emailMessages: ImportProcessEmailMessages) {
         const dreamTagsImport: DreamTagImportType[] = []
 
         await db.transaction(async trx => {
-            let dreamsNoSleep: ExportUserDataDreams[] = []
-
-            for (const dream of dreams) {
-                try {
-                    const isDreamInDb = await Dream.query()
-                        .innerJoin("sleeps", "sleeps.id", "dreams.sleep_id")
-                        .where("title", dream.title)
-                        .andWhereNot("sleeps.user_id", "!=", userId)
-                        .select("dreams.id")
-                        .first()
-                        .then(result => result != null)
-
-                    if (!isDreamInDb) {
-                        const sleepsExists = await Sleep
-                            .query()
-                            .where("id", dream.sleepId)
-                            .andWhere("user_id", userId)
+            try {
+                for (const dream of dreams) {
+                    try {
+                        const isDreamInDb = await Dream.query()
+                            .innerJoin("sleeps", "sleeps.id", "dreams.sleep_id")
+                            .where("title", dream.title)
+                            .andWhereNot("sleeps.user_id", "!=", userId)
+                            .select("dreams.id")
                             .first()
                             .then(result => result != null)
 
-                        if (!sleepsExists) {
-                            dreamsNoSleep.push({
-                                ...dream,
-                                sleepId: 0,
-                            })
-                            continue
+                        if (!isDreamInDb) {
+                            const newSleepId = await ImportDataWorkers.searchOrCreateSleepCycleForDream(trx, userId, dream.sleepId, null)
+                            dream.sleepId = newSleepId
+
+                            const { id, ...dreamModel } = dream
+
+                            const newDreamId = await Dream
+                                .create(dreamModel, { client: trx })
+                                .then(result => result.id)
+                            dreamTagsImport.push({ dreamId: newDreamId, tags: dream.dreamTags })
                         }
-
-                        const { id, ...dreamModel } = dream
-
-                        const newDreamId = await Dream.create(dreamModel, { client: trx })
-                            .then(result => result.id)
-                        dreamTagsImport.push({ dreamId: newDreamId, tags: dream.dreamTags })
+                    }
+                    catch {
+                        emailMessages.errorOnDreamCreation = true
                     }
                 }
-                catch {
-                    emailMessages.errorOnDreamCreation = true
-                }
+                await trx.commit()
             }
-
-            if (dreamsNoSleep.length > 0)
-                emailMessages.dreamsWithNoSleep = true
-
-            const lastSleepId = await Sleep.query()
-                .where("user_id", userId)
-                .orderBy("date", "desc")
-                .first()
-                .then(async (result) => {
-                    if (!result)
-                        return ImportDataWorkers.createEmergencySleepCycle(userId)
-                    return result.id
-                })
-
-            for (const dreamNoSleep of dreamsNoSleep) {
-                try {
-                    dreamNoSleep.sleepId = lastSleepId
-                    const { id, ...dreamModel } = dreamNoSleep
-                    const newDreamId = await Dream.create(dreamModel, { client: trx })
-                        .then(result => result.id)
-                    dreamTagsImport.push({ dreamId: newDreamId, tags: dreamNoSleep.dreamTags })
-                }
-                catch {
-                    emailMessages.errorOnDreamCreation = true
-                }
+            catch {
+                await trx.rollback()
             }
-            dreamsNoSleep = []
         })
 
         await db.transaction(async (trx) => {
@@ -379,19 +353,7 @@ class ImportDataWorkers {
         })
     }
 
-    static async createEmergencySleepCycle(userId: number): Promise<number> {
-        const yesterday = DateTime.now().minus({ days: 1 })
-        const newSleepId = await Sleep.create({
-            date: yesterday,
-            sleepTime: 1,
-            sleepStart: yesterday.minus({ hour: 1 }),
-            sleepEnd: yesterday,
-            isNightSleep: (yesterday.hour >= 0 && yesterday.hour <= 11) || (yesterday.hour >= 18 && yesterday.hour <= 23),
-            userId: userId,
-        }).then(result => result.id)
-        return newSleepId
-    }
-
+    /** Trata da criação e edição das tags de um sonho importado */
     static async manageTags(newTags: string[], dreamId: number, trx: TransactionClientContract): Promise<void> {
         const oldTags = await db.query()
             .from("dream_tags")
@@ -443,76 +405,116 @@ class ImportDataWorkers {
         }
     }
 
-    static async importExternalDreams(userId: number, dreams: any[], emailMessages: ImportProcessEmailMessages) {
-        try {
-            const lastSleepCycleId = await Sleep.query()
+    /** Busca ou cria um ciclo de sono para um sonho */
+    static async searchOrCreateSleepCycleForDream(trx: TransactionClientContract, userId: number, sleepId: number | null, dreamDate: DateTime | null): Promise<number> {
+        // Verifica-se a existência do sleepId informado
+        if (sleepId) {
+            const sleepExists = await Sleep.query()
                 .where("user_id", userId)
+                .andWhere("id", sleepId)
                 .orderBy("created_at", "desc")
                 .first()
-                .then(result => {
-                    if (!result)
-                        return ImportDataWorkers.createEmergencySleepCycle(userId)
-                    return result.id
-                })
+                .then(result => result != null)
 
+            if (sleepExists) return sleepId
+        }
+        // Verifica-se a existência de um ciclo de sono pertencente a data informada, caso contrário, cria um para essa data
+        if (dreamDate) {
+            const dreamDatePeriodDayBefore = dreamDate.minus({ days: 1 }).set({ hour: 0, minute: 0, second: 1 })
+            const dreamDatePeriodDayAfter = dreamDate.plus({ days: 1 }).set({ hour: 23, minute: 59, second: 59 })
+            const sameSleepIntervalSleeps = await ImportDataWorkers.getSameSleepIntervalSleeps(userId, dreamDate, dreamDatePeriodDayBefore, dreamDatePeriodDayAfter)
+
+            if (sameSleepIntervalSleeps.length > 0)
+                return sameSleepIntervalSleeps[0].id
+
+            return await Sleep.create({
+                date: dreamDate,
+                sleepTime: 1,
+                sleepStart: dreamDate.set({ hour: 0, minute: 0, second: 1 }),
+                sleepEnd: dreamDate.set({ hour: 1, minute: 0, second: 0 }),
+                isNightSleep: true,
+                userId: userId,
+            }, { client: trx })
+                .then(result => result.id)
+        }
+
+        // Busca-se pelo último ciclo de sono do usuário
+        const lastSleepCycleId = await Sleep.query()
+            .where("user_id", userId)
+            .orderBy("created_at", "desc")
+            .first()
+            .then(result => result ? result.id : null)
+
+        if (lastSleepCycleId)
+            return lastSleepCycleId
+
+        // Em caso de nenhum ciclo de sono cadastrado, cria-se um falso para o armazenamento dos sonhos sem informação de ciclo de sono
+        const yesterday = DateTime.now().minus({ days: 1 }).set({ hour: 0, minute: 0, second: 1 })
+        return await Sleep.create({
+            date: yesterday.minus({ days: 1 }),
+            sleepTime: 1,
+            sleepStart: yesterday,
+            sleepEnd: yesterday.plus({ hours: 1 }),
+            isNightSleep: true,
+            userId: userId,
+        }).then(result => result.id)
+    }
+
+    /** Realiza a importação dos sonhos externos */
+    static async importExternalDreams(userId: number, dreams: any[], emailMessages: ImportProcessEmailMessages) {
+        try {
             db.transaction(async (trx) => {
-                for (const dream of dreams) {
-                    try {
-                        const formattedDream = ImportDataWorkers.tryParseExternalDream(dream, emailMessages)
+                try {
+                    for (const dream of dreams) {
+                        try {
+                            const formattedDream = ImportDataWorkers.tryParseExternalDream(dream, emailMessages)
 
-                        if (formattedDream) {
-                            if (!formattedDream.date)
-                                emailMessages.dreamsWithNoSleep = true
+                            if (formattedDream) {
+                                if (!formattedDream.date)
+                                    emailMessages.dreamsWithNoSleep = true
 
-                            let sleepId: number | null = null
+                                const sleepId = await ImportDataWorkers.searchOrCreateSleepCycleForDream(trx, userId, null, formattedDream.date)
 
-                            if (formattedDream.date) {
-                                sleepId = await Sleep.query()
-                                    .where("user_id", userId)
-                                    .andWhere("date", formattedDream.date.toISO()!)
-                                    .orderBy("created_at", "desc")
-                                    .first()
-                                    .then(result => result ? result.id : null)
+                                const dreamId = await Dream.create({
+                                    title: formattedDream.title,
+                                    description: formattedDream.description,
+                                    climate: {
+                                        ameno: false,
+                                        calor: false,
+                                        garoa: false,
+                                        chuva: false,
+                                        tempestade: false,
+                                        nevoa: false,
+                                        neve: false,
+                                        multiplos: false,
+                                        outro: false,
+                                        indefinido: true,
+                                    },
+                                    isComplete: true,
+                                    dreamOriginId: 1,
+                                    dreamPointOfViewId: 1,
+                                    dreamHourId: 5,
+                                    dreamDurationId: 1,
+                                    dreamLucidityLevelId: 1,
+                                    dreamTypeId: 1,
+                                    dreamRealityLevelId: 1,
+                                    sleepId: sleepId,
+                                }, { client: trx }).then(result => result.id)
+
+                                if (formattedDream.tags.length > 0)
+                                    await ImportDataWorkers.manageTags(formattedDream.tags, dreamId, trx)
+                                continue
                             }
-                            else {
-                                sleepId = lastSleepCycleId
-                            }
-
-                            const dreamId = await Dream.create({
-                                title: formattedDream.title,
-                                description: formattedDream.description,
-                                climate: {
-                                    ameno: false,
-                                    calor: false,
-                                    garoa: false,
-                                    chuva: false,
-                                    tempestade: false,
-                                    nevoa: false,
-                                    neve: false,
-                                    multiplos: false,
-                                    outro: false,
-                                    indefinido: true,
-                                },
-                                isComplete: true,
-                                dreamOriginId: 1,
-                                dreamPointOfViewId: 1,
-                                dreamHourId: 5,
-                                dreamDurationId: 1,
-                                dreamLucidityLevelId: 1,
-                                dreamTypeId: 1,
-                                dreamRealityLevelId: 1,
-                                sleepId: sleepId!,
-                            }, { client: trx }).then(result => result.id)
-
-                            if (formattedDream.tags.length > 0)
-                                await ImportDataWorkers.manageTags(formattedDream.tags, dreamId, trx)
-                            continue
+                            emailMessages.errorOnDreamCreation = true
                         }
-                        emailMessages.errorOnDreamCreation = true
+                        catch {
+                            emailMessages.errorOnDreamCreation = true
+                        }
                     }
-                    catch {
-                        emailMessages.errorOnDreamCreation = true
-                    }
+                    await trx.commit()
+                }
+                catch {
+                    await trx.rollback()
                 }
             })
         }
@@ -521,6 +523,7 @@ class ImportDataWorkers {
         }
     }
 
+    /** Buca e trata um sonho externo do usuário */
     static tryParseExternalDream(dreamData: any, emailMessages: ImportProcessEmailMessages): ExternalDreamType | null {
         try {
             let date: string | null = null
@@ -529,10 +532,10 @@ class ImportDataWorkers {
             let tags : string[] = []
 
             if ("date" in dreamData) date = dreamData["date"]
-            else if ("createdAt" in dreamData) date = dreamData["date"]
-            else if ("created" in dreamData) date = dreamData["date"]
-            else if ("updatedAt" in dreamData) date = dreamData["date"]
-            else if ("updated" in dreamData) date = dreamData["date"]
+            else if ("createdAt" in dreamData) date = dreamData["createdAt"]
+            else if ("created" in dreamData) date = dreamData["created"]
+            else if ("updatedAt" in dreamData) date = dreamData["updatedAt"]
+            else if ("updated" in dreamData) date = dreamData["updated"]
             else date = null
 
             if ("title" in dreamData) title = dreamData["title"]
@@ -562,8 +565,17 @@ class ImportDataWorkers {
             if (date) {
                 try {
                     parsedDate = DateTime.fromISO(date)
-                }
-                catch { }
+                } catch { }
+                // TRATAMENTO ESPECIAL PARA DATA NA EXPORTAÇÃO DO DREAM CATCHER
+                try {
+                    if (parsedDate) {
+                        if (!parsedDate.isValid) {
+                            const splitedDate = date.split(" ")
+                            const splitedTime = splitedDate[1].split("-")
+                            parsedDate = DateTime.fromISO(`${ splitedDate[0] }T${ splitedTime[0] }-03:00`)
+                        }
+                    }
+                } catch { }
             }
 
             if (!title && !description) {
@@ -583,6 +595,7 @@ class ImportDataWorkers {
         }
     }
 
+    /** Busca o caminho dos sonhos no arquivo informado pelo usuário */
     static tryParseExternalDreamsImportPath(data: string, dreamsPath: string, emailMessages: ImportProcessEmailMessages): any[] {
         try {
             const dreamsPathList = dreamsPath.split("/")
@@ -600,6 +613,7 @@ class ImportDataWorkers {
         }
     }
 
+    /** Monta a mensagem de finalização da importação para o email do usuário */
     static mountEmailMessage(success: boolean, emailMessages: ImportProcessEmailMessages): string {
         const messages: string[] = []
 
