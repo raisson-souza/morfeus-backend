@@ -20,9 +20,7 @@ import User from '#models/user'
 
 type ImportProcessEmailMessages = {
     totalDreams: number
-    totalDreamsImported: number
     totalSleeps: number
-    totalSleepsImported: number
     errorOnSleepCreation: boolean
     errorOnDreamCreation: boolean
     dreamsWithNoSleep: boolean
@@ -44,9 +42,7 @@ class ImportDataWorkers {
         console.log(`${ DateTime.now().toISO() } - JOB importData`)
         const emailMessages: ImportProcessEmailMessages = {
             totalDreams: 0,
-            totalDreamsImported: 0,
             totalSleeps: 0,
-            totalSleepsImported: 0,
             errorOnSleepCreation: false,
             errorOnDreamCreation: false,
             dreamsWithNoSleep: false,
@@ -234,7 +230,6 @@ class ImportDataWorkers {
                         const newSleepId = await Sleep.create({ ...sleepModel, userId: userId }, { client: trx })
                             .then(result => result.id)
                         updateDreamsIds(sleep.id, newSleepId)
-                        emailMessages.totalSleepsImported += 1
                     }
                     catch {
                         emailMessages.errorOnDreamCreation = true
@@ -338,8 +333,6 @@ class ImportDataWorkers {
                                 .then(result => result.id)
                             dreamTagsImport.push({ dreamId: newDreamId, tags: dream.dreamTags })
                         }
-
-                        emailMessages.totalDreamsImported += 1
                     }
                     catch {
                         emailMessages.errorOnDreamCreation = true
@@ -515,7 +508,6 @@ class ImportDataWorkers {
                                 if (formattedDream.tags.length > 0)
                                     await ImportDataWorkers.manageTags(formattedDream.tags, dreamId, trx)
 
-                                emailMessages.totalDreamsImported += 1
                                 continue
                             }
                             emailMessages.errorOnDreamCreation = true
@@ -627,9 +619,7 @@ class ImportDataWorkers {
     static mountEmailMessage(userName: string, success: boolean, emailMessages: ImportProcessEmailMessages): string {
         const {
             totalDreams,
-            totalDreamsImported,
             totalSleeps,
-            totalSleepsImported,
             errorOnSleepCreation,
             errorOnDreamCreation,
             dreamsWithNoSleep,
@@ -646,9 +636,6 @@ class ImportDataWorkers {
         messages.push(`Um total de ${ totalDreams } sonhos e ${ totalSleeps } ciclos de sono foram catalogados no arquivo de importação.`)
 
         if (success) {
-            messages.push(`${ totalDreamsImported } sonhos e ${ totalSleepsImported } ciclos de sono foram importados com sucesso.`)
-            messages.push(`Não foi possível importar ${ totalDreams - totalDreamsImported } sonhos e ${ totalSleeps - totalSleepsImported } ciclos de sono.`)
-
             const errorDuringImportProcess = errorOnSleepCreation || errorOnDreamCreation || dreamsWithNoSleep || dreamsWithNoTags
 
             if (errorDuringImportProcess) {
