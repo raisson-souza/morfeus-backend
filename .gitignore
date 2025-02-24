@@ -25,4 +25,5 @@ yarn-error.log
 .DS_Store
 
 # Arquivo para importação
-/uploads
+uploads/*
+!uploads/.uploads
