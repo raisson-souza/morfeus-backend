@@ -1,4 +1,4 @@
-import { createUserValidator, exportUserDataValidator, finishAccountRecoveryValidator, importUserDataValidator, loginValidator, updateUserValidator } from '#validators/user'
+import { createUserValidator, exportUserDataValidator, finishAccountRecoveryValidator, importUserDataValidator, loginValidator, syncRecordsValidator, updateUserValidator } from '#validators/user'
 import { DateTime } from 'luxon'
 import { ExportUserData } from '../types/userTypes.js'
 import { inject } from '@adonisjs/core'
@@ -160,6 +160,17 @@ export default class UserController {
 
             const msg = await this.userService.ImportUserData(auth.user!.id, file, fileContent, isSameOriginImport, dreamsPath)
             ResponseSender<string>({ response, data: msg })
+        }
+        catch (ex) {
+            ResponseSender<string>({ response, data: ex as Error })
+        }
+    }
+
+    async syncRecords({ request, response, auth }: HttpContext) : Promise<void> {
+        try {
+            const { date } = await request.validateUsing(syncRecordsValidator)
+            const data = await this.userService.SyncRecords(auth.user!.id, DateTime.fromJSDate(date) as DateTime<true>)
+            ResponseSender<ExportUserData>({ response, data: data })
         }
         catch (ex) {
             ResponseSender<string>({ response, data: ex as Error })

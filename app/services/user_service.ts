@@ -322,6 +322,18 @@ export default class UserService implements UserServiceProps {
         return "Importação iniciada com sucesso."
     }
 
+    async SyncRecords(userId: number, date: DateTime<true>): Promise<ExportUserData> {
+        const userExists = await User.find(userId).then(result => result != null)
+
+        if (!userExists)
+            throw new CustomException(400, "Usuário não encontrado.")
+
+        // Apenas registros dos 30 dias anteriores são sempre sincronizados
+        const last30DaysDate = date.minus({ days: 30 }).set({ hour: 0, minute: 0, second: 1, millisecond: 0 })
+
+        return this.ExportUserData(userId, last30DaysDate, date)
+    }
+
     private async ValidateAccountRecovery(code: string): Promise<AccountRecovery | null> {
         const accountRecovery = await AccountRecovery.query()
             .where("code", code)

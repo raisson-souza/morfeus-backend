@@ -51,3 +51,10 @@ export const importUserDataValidator = vine.compile(
         fileContent: vine.string().nullable(),
     })
 )
+
+/** Valida a sincronização de dados de um usuário */
+export const syncRecordsValidator = vine.compile(
+    vine.object({
+        date: vine.date({ formats: ['YYYY-MM-DD', 'YYYY/MM/DD'] }),
+    })
+)

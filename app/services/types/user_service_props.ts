@@ -20,4 +20,6 @@ export default interface UserServiceProps extends BaseProps<User, UserInput, Use
     ExportUserData(userId: number, startDate: DateTime<true>, endDate: DateTime<true>): Promise<ExportUserData>
     /** Realiza a importação dos dados do usuário */
     ImportUserData(userId: number, file: MultipartFile | null, fileContent: string | null, isSameOriginImport: boolean, dreamsPath: string | null): Promise<string>
+    /** Realiza a sincronização dos dados do usuário */
+    SyncRecords(userId: number, date: DateTime<true>): Promise<ExportUserData>
 }
