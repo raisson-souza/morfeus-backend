@@ -152,13 +152,13 @@ export default class UserController {
 
     async importUserData({ request, response, auth }: HttpContext) : Promise<void> {
         try {
-            const { isSameOriginImport, dreamsPath, fileContent } = await request.validateUsing(importUserDataValidator)
+            const { isSameOriginImport, dreamsPath, fileContent, sendEmailOnFinish } = await request.validateUsing(importUserDataValidator)
             const file = request.file("file", {
                 extnames: ["json"],
                 size: "3mb",
             })
 
-            const msg = await this.userService.ImportUserData(auth.user!.id, file, fileContent, isSameOriginImport, dreamsPath)
+            const msg = await this.userService.ImportUserData(auth.user!.id, file, fileContent, isSameOriginImport, dreamsPath, sendEmailOnFinish ?? true)
             ResponseSender<string>({ response, data: msg })
         }
         catch (ex) {
@@ -168,8 +168,8 @@ export default class UserController {
 
     async syncRecords({ request, response, auth }: HttpContext) : Promise<void> {
         try {
-            const { date } = await request.validateUsing(syncRecordsValidator)
-            const data = await this.userService.SyncRecords(auth.user!.id, DateTime.fromJSDate(date) as DateTime<true>)
+            const { monthDate } = await request.validateUsing(syncRecordsValidator)
+            const data = await this.userService.SyncRecords(auth.user!.id, monthDate ? DateTime.fromJSDate(monthDate) as DateTime<true> : null)
             ResponseSender<ExportUserData>({ response, data: data })
         }
         catch (ex) {

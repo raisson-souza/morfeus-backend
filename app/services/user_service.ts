@@ -285,7 +285,14 @@ export default class UserService implements UserServiceProps {
         return { sleeps, dreams }
     }
 
-    async ImportUserData(userId: number, reqFile: MultipartFile | null, fileContent: string | null, isSameOriginImport: boolean, dreamsPath: string | null): Promise<string> {
+    async ImportUserData(
+        userId: number,
+        reqFile: MultipartFile | null,
+        fileContent: string | null,
+        isSameOriginImport: boolean,
+        dreamsPath: string | null,
+        sendEmailOnFinish: boolean,
+    ): Promise<string> {
         if (!reqFile && !fileContent)
             throw new CustomException(400, "Arquivo não encontrado.")
 
@@ -317,21 +324,30 @@ export default class UserService implements UserServiceProps {
         await ImportDataQueue.importData({
             fileId: file.id,
             userId: userId,
+            sendEmailOnFinish,
         })
 
         return "Importação iniciada com sucesso."
     }
 
-    async SyncRecords(userId: number, date: DateTime<true>): Promise<ExportUserData> {
+    async SyncRecords(userId: number, monthDate: DateTime<true> | null): Promise<ExportUserData> {
         const userExists = await User.find(userId).then(result => result != null)
 
         if (!userExists)
             throw new CustomException(400, "Usuário não encontrado.")
 
-        // Apenas registros dos 30 dias anteriores são sempre sincronizados
-        const last30DaysDate = date.minus({ days: 30 }).set({ hour: 0, minute: 0, second: 1, millisecond: 0 })
+        if (monthDate) {
+            return this.ExportUserData(
+                userId,
+                monthDate.set({ day: 1, hour: 0, minute: 0, second: 1, millisecond: 0 }),
+                monthDate.set({ day: monthDate.daysInMonth, hour: 23, minute: 59, second: 59 }),
+            )
+        }
 
-        return this.ExportUserData(userId, last30DaysDate, date)
+        // Apenas registros dos 30 dias anteriores são sempre sincronizados
+        const last30DaysDate = DateTime.now().minus({ days: 30 }).set({ hour: 0, minute: 0, second: 1, millisecond: 0 })
+
+        return this.ExportUserData(userId, last30DaysDate, DateTime.now())
     }
 
     private async ValidateAccountRecovery(code: string): Promise<AccountRecovery | null> {

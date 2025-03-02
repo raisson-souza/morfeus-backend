@@ -119,21 +119,25 @@ class ImportDataWorkers {
                     throw new Error(ex.message)
                 })
 
-            await EmailSender.Send({
-                subject: "Importação de Dados",
-                text: ImportDataWorkers.mountEmailMessage(user.name, true, emailMessages),
-                to: user.email,
-            })
+            if (job.data.sendEmailOnFinish) {
+                await EmailSender.Send({
+                    subject: "Importação de Dados",
+                    text: ImportDataWorkers.mountEmailMessage(user.name, true, emailMessages),
+                    to: user.email,
+                })
+            }
 
             await finishFile()
         }
         catch (ex) {
             console.log(`Erro em importData:\m ${ ex.message }`)
-            await EmailSender.Send({
-                subject: "Importação de Dados",
-                text: ImportDataWorkers.mountEmailMessage(user.name, false, emailMessages),
-                to: user.email,
-            })
+            if (job.data.sendEmailOnFinish) {
+                await EmailSender.Send({
+                    subject: "Importação de Dados",
+                    text: ImportDataWorkers.mountEmailMessage(user.name, false, emailMessages),
+                    to: user.email,
+                })
+            }
         }
     }
 

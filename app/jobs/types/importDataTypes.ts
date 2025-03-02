@@ -3,6 +3,7 @@ import { DateTime } from "luxon"
 export type ImportDataJob = {
     fileId: number
     userId: number
+    sendEmailOnFinish: boolean
 }
 
 export type ClearImportFilesJob = { }

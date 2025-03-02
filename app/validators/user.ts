@@ -49,12 +49,13 @@ export const importUserDataValidator = vine.compile(
         isSameOriginImport: vine.boolean(),
         dreamsPath: vine.string().trim().nullable(),
         fileContent: vine.string().nullable(),
+        sendEmailOnFinish: vine.boolean().nullable(), // TODO: ajustar no processo original no frontend
     })
 )
 
 /** Valida a sincronização de dados de um usuário */
 export const syncRecordsValidator = vine.compile(
     vine.object({
-        date: vine.date({ formats: ['YYYY-MM-DD', 'YYYY/MM/DD'] }),
+        monthDate: vine.date({ formats: ['YYYY-MM-DD', 'YYYY/MM/DD'] }).nullable(),
     })
 )
