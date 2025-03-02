@@ -1,5 +1,6 @@
 import { AccessToken } from "@adonisjs/auth/access_tokens"
 import { DateTime } from "luxon"
+import { DreamNoSleepTimeKnown } from "../../types/dreamTypes.js"
 import { ExportUserData, UserInput, UserModalAccountRecovery, UserOutput } from "../../types/userTypes.js"
 import { MultipartFile } from "@adonisjs/core/bodyparser"
 import BaseProps from "./base_props.js"
@@ -22,4 +23,6 @@ export default interface UserServiceProps extends BaseProps<User, UserInput, Use
     ImportUserData(userId: number, file: MultipartFile | null, fileContent: string | null, isSameOriginImport: boolean, dreamsPath: string | null, sendEmailOnFinish: boolean): Promise<string>
     /** Realiza a sincronização dos dados do usuário */
     SyncRecords(userId: number, monthDate: DateTime<true> | null): Promise<ExportUserData>
+    /** Realiza a validação da sincronização de um regsitro */
+    CheckSynchronizedRecord(userId: number, dreamTitle: string | null, sleepCycle: DreamNoSleepTimeKnown | null): Promise<number>
 }

@@ -1,5 +1,6 @@
-import { createUserValidator, exportUserDataValidator, finishAccountRecoveryValidator, importUserDataValidator, loginValidator, syncRecordsValidator, updateUserValidator } from '#validators/user'
+import { checkSynchronizedRecordValidator, createUserValidator, exportUserDataValidator, finishAccountRecoveryValidator, importUserDataValidator, loginValidator, syncRecordsValidator, updateUserValidator } from '#validators/user'
 import { DateTime } from 'luxon'
+import { DreamNoSleepTimeKnown } from '../types/dreamTypes.js'
 import { ExportUserData } from '../types/userTypes.js'
 import { inject } from '@adonisjs/core'
 import { LoginResponse } from '../types/loginTypes.js'
@@ -171,6 +172,24 @@ export default class UserController {
             const { monthDate } = await request.validateUsing(syncRecordsValidator)
             const data = await this.userService.SyncRecords(auth.user!.id, monthDate ? DateTime.fromJSDate(monthDate) as DateTime<true> : null)
             ResponseSender<ExportUserData>({ response, data: data })
+        }
+        catch (ex) {
+            ResponseSender<string>({ response, data: ex as Error })
+        }
+    }
+
+    async checkSynchronizedRecord({ request, response, auth }: HttpContext) : Promise<void> {
+        try {
+            const { dreamTitle, sleepCycle } = await request.validateUsing(checkSynchronizedRecordValidator)
+            const parsedSleepCycle: DreamNoSleepTimeKnown | null = sleepCycle != null
+                ? {
+                    date: DateTime.fromJSDate(sleepCycle.date),
+                    sleepStart: DateTime.fromJSDate(sleepCycle.sleepStart),
+                    sleepEnd: DateTime.fromJSDate(sleepCycle.sleepEnd),
+                }
+                : null
+            const recordId = await this.userService.CheckSynchronizedRecord(auth.user!.id, dreamTitle, parsedSleepCycle)
+            ResponseSender<number>({ response, data: recordId })
         }
         catch (ex) {
             ResponseSender<string>({ response, data: ex as Error })

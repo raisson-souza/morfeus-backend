@@ -1,6 +1,7 @@
 import { AccessToken } from "@adonisjs/auth/access_tokens"
 import { cuid } from "@adonisjs/core/helpers"
 import { DateTime } from "luxon"
+import { DreamNoSleepTimeKnown } from "../types/dreamTypes.js"
 import { Exception } from "@adonisjs/core/exceptions"
 import { ExportUserData, ExportUserDataDreams, ExportUserDataSleeps, UserInput, UserModalAccountRecovery, UserOutput } from "../types/userTypes.js"
 import { MultipartFile } from "@adonisjs/core/bodyparser"
@@ -334,7 +335,7 @@ export default class UserService implements UserServiceProps {
         const userExists = await User.find(userId).then(result => result != null)
 
         if (!userExists)
-            throw new CustomException(400, "Usuário não encontrado.")
+            throw new CustomException(404, "Usuário não encontrado.")
 
         if (monthDate) {
             return this.ExportUserData(
@@ -348,6 +349,48 @@ export default class UserService implements UserServiceProps {
         const last30DaysDate = DateTime.now().minus({ days: 30 }).set({ hour: 0, minute: 0, second: 1, millisecond: 0 })
 
         return this.ExportUserData(userId, last30DaysDate, DateTime.now())
+    }
+
+    async CheckSynchronizedRecord(
+        userId: number,
+        dreamTitle: string | null,
+        sleepCycle: DreamNoSleepTimeKnown | null,
+    ): Promise<number> {
+        const userExists = await User.find(userId).then(result => result != null)
+
+        if (!userExists)
+            throw new CustomException(404, "Usuário não encontrado.")
+
+        if (!dreamTitle && !sleepCycle)
+            throw new CustomException(400, "É necessário informar um sonho ou ciclo de sono para a verificação de sincronização.")
+
+        if (dreamTitle) {
+            return await Dream
+                .query()
+                .innerJoin("sleeps", "sleeps.id", "dreams.sleep_id")
+                .where("sleeps.user_id", userId)
+                .andWhere("dreams.title", dreamTitle)
+                .select("dreams.id")
+                .first()
+                .then(result => {
+                    if (!result)
+                        throw new CustomException(404, "Sonho não sincronizado.")
+                    return result.id
+                })
+        }
+
+        return await Sleep.query()
+            .where("user_id", userId)
+            .andWhere("date", sleepCycle!.date.toISO()!)
+            .andWhere("sleep_start", sleepCycle!.sleepStart.toISO()!)
+            .andWhere("sleep_end", sleepCycle!.sleepEnd.toISO()!)
+            .select("id")
+            .first()
+            .then(result => {
+                if (!result)
+                    throw new CustomException(404, "Ciclo de sono não sincronizado.")
+                return result.id
+            })
     }
 
     private async ValidateAccountRecovery(code: string): Promise<AccountRecovery | null> {

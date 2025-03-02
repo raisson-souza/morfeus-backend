@@ -59,6 +59,7 @@ router
             router.post('/export', [userController, 'exportUserData'])
             router.post('/import', [userController, 'importUserData'])
             router.post('/sync_records', [userController, 'syncRecords'])
+            router.post('/check_synchronized_record', [userController, 'checkSynchronizedRecord'])
           })
           .prefix('/data')
           .use(middleware.auth({ guards: ['api'] }))

@@ -59,3 +59,15 @@ export const syncRecordsValidator = vine.compile(
         monthDate: vine.date({ formats: ['YYYY-MM-DD', 'YYYY/MM/DD'] }).nullable(),
     })
 )
+
+/** Valida a validação de sincronização de um registro */
+export const checkSynchronizedRecordValidator = vine.compile(
+    vine.object({
+        dreamTitle: vine.string().nullable(),
+        sleepCycle: vine.object({
+            date: vine.date({ formats: ['YYYY-MM-DD', 'YYYY/MM/DD'] }),
+            sleepStart: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] }),
+            sleepEnd: vine.date({ formats: ['YYYY-MM-DD HH:mm:ss', 'YYYY/MM/DD HH:mm:ss'] })
+        }).nullable(),
+    })
+)
