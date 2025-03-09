@@ -1,7 +1,7 @@
 import { checkSynchronizedRecordValidator, createUserValidator, exportUserDataValidator, finishAccountRecoveryValidator, importUserDataValidator, loginValidator, syncRecordsValidator, updateUserValidator } from '#validators/user'
 import { DateTime } from 'luxon'
 import { DreamNoSleepTimeKnown } from '../types/dreamTypes.js'
-import { ExportUserData } from '../types/userTypes.js'
+import { ExportUserData, SyncRecordsDaysPeriodOverrideType } from '../types/userTypes.js'
 import { inject } from '@adonisjs/core'
 import { LoginResponse } from '../types/loginTypes.js'
 import { ModelPaginatorContract } from '@adonisjs/lucid/types/model'
@@ -169,8 +169,15 @@ export default class UserController {
 
     async syncRecords({ request, response, auth }: HttpContext) : Promise<void> {
         try {
-            const { monthDate } = await request.validateUsing(syncRecordsValidator)
-            const data = await this.userService.SyncRecords(auth.user!.id, monthDate ? DateTime.fromJSDate(monthDate) as DateTime<true> : null)
+            const { monthDate, daysPeriodOverride } = await request.validateUsing(syncRecordsValidator)
+            const parsedMonthDate = monthDate ? DateTime.fromJSDate(monthDate) as DateTime<true> : null
+            const daysPeriodOverrideParsed: SyncRecordsDaysPeriodOverrideType | null = daysPeriodOverride
+                ? {
+                    start: DateTime.fromJSDate(daysPeriodOverride.start) as DateTime<true>,
+                    end: DateTime.fromJSDate(daysPeriodOverride.end) as DateTime<true>,
+                }
+                : null
+            const data = await this.userService.SyncRecords(auth.user!.id, parsedMonthDate, daysPeriodOverrideParsed)
             ResponseSender<ExportUserData>({ response, data: data })
         }
         catch (ex) {

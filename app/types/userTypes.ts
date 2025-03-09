@@ -56,3 +56,8 @@ export type ExportUserData = {
     sleeps: ExportUserDataSleeps[]
     dreams: ExportUserDataDreams[]
 }
+
+export type SyncRecordsDaysPeriodOverrideType = {
+    start: DateTime<true>
+    end: DateTime<true>
+}

@@ -3,7 +3,7 @@ import { cuid } from "@adonisjs/core/helpers"
 import { DateTime } from "luxon"
 import { DreamNoSleepTimeKnown } from "../types/dreamTypes.js"
 import { Exception } from "@adonisjs/core/exceptions"
-import { ExportUserData, ExportUserDataDreams, ExportUserDataSleeps, UserInput, UserModalAccountRecovery, UserOutput } from "../types/userTypes.js"
+import { ExportUserData, ExportUserDataDreams, ExportUserDataSleeps, SyncRecordsDaysPeriodOverrideType, UserInput, UserModalAccountRecovery, UserOutput } from "../types/userTypes.js"
 import { MultipartFile } from "@adonisjs/core/bodyparser"
 import { Pagination } from "../types/pagiation.js"
 import AccountRecovery from "#models/account_recovery"
@@ -331,11 +331,22 @@ export default class UserService implements UserServiceProps {
         return "Importação iniciada com sucesso."
     }
 
-    async SyncRecords(userId: number, monthDate: DateTime<true> | null): Promise<ExportUserData> {
+    async SyncRecords(userId: number, monthDate: DateTime<true> | null, daysPeriodOverride: SyncRecordsDaysPeriodOverrideType | null): Promise<ExportUserData> {
         const userExists = await User.find(userId).then(result => result != null)
 
         if (!userExists)
             throw new CustomException(404, "Usuário não encontrado.")
+
+        if (daysPeriodOverride) {
+            if (daysPeriodOverride.end.diff(daysPeriodOverride.start, "days").days > 30)
+                throw new CustomException(400, "Configuração de sincronização de registros inválida.")
+
+            return this.ExportUserData(
+                userId,
+                daysPeriodOverride.start.set({ hour: 0, minute: 0, second: 1, millisecond: 0 }),
+                daysPeriodOverride.end.set({hour: 23, minute: 59, second: 59 }),
+            )
+        }
 
         if (monthDate) {
             return this.ExportUserData(

@@ -57,6 +57,10 @@ export const importUserDataValidator = vine.compile(
 export const syncRecordsValidator = vine.compile(
     vine.object({
         monthDate: vine.date({ formats: ['YYYY-MM-DD', 'YYYY/MM/DD'] }).nullable(),
+        daysPeriodOverride: vine.object({
+            start: vine.date({ formats: ['YYYY-MM-DD', 'YYYY/MM/DD'] }),
+            end: vine.date({ formats: ['YYYY-MM-DD', 'YYYY/MM/DD'] })
+        }).nullable()
     })
 )
 
