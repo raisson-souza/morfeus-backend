@@ -44,6 +44,9 @@ export default class SleepService implements SleepServiceProps {
 
             // Se há sonhos no sono criado, serão criados também
             if (sleep.dreams.length > 0) {
+                if (sleep.dreams.length >= 30)
+                    throw new CustomException(400, "Limite de sonhos por ciclo de sono excedido.")
+
                 // ID do sono é atribuido a todos os sonhos a serem criados
                 sleep.dreams.map((_, i) => { sleep.dreams[i].sleepId = newSleep.id })
 

@@ -51,6 +51,8 @@ export default class DreamService implements DreamServiceProps {
                 if (!sleepExists)
                     throw new CustomException(404, "Sono referente não encontrado.")
 
+                await this.ValidateSleepCycleDreamLimit(dream.sleepId)
+
                 await this.Validate(dream)
                 newDream = await Dream.create(dreamModel, { client: trx })
                 await this.ManageTags(dream.tags, newDream!.id, trx)
@@ -68,6 +70,8 @@ export default class DreamService implements DreamServiceProps {
                     dream.dreamNoSleepDateKnown,
                     trx
                 )
+
+                await this.ValidateSleepCycleDreamLimit(dreamModel.sleepId)
 
                 await trx.transaction(async (childTrx) => {
                     this.Validate(dream)
@@ -550,5 +554,16 @@ export default class DreamService implements DreamServiceProps {
                 return sleep.id
         }
         return null
+    }
+
+    private async ValidateSleepCycleDreamLimit(sleepId: number): Promise<void> {
+        const dreamQuantity = await Dream.query()
+            .innerJoin("sleeps", "sleeps.id", "dreams.sleep_id")
+            .where("dreams.sleep_id", sleepId)
+            .select("dreams.id")
+            .then(result => result.length)
+
+        if (dreamQuantity >= 30)
+            throw new CustomException(400, "Limite de sonhos por ciclo de sono excedido.")
     }
 }
