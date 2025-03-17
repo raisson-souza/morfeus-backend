@@ -359,6 +359,10 @@ class ImportDataWorkers {
 
     /** Trata da criação e edição das tags de um sonho importado */
     static async manageTags(newTags: string[], dreamId: number, trx: TransactionClientContract): Promise<void> {
+        newTags.map((newTag, i) => {
+            newTags[i] = newTag.replaceAll(" ", "_")
+        })
+
         const oldTags = await db.query()
             .from("dream_tags")
             .innerJoin("tags", "tags.id", "dream_tags.tag_id")
